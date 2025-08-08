@@ -4,7 +4,7 @@ import { HeroCards } from "./HeroCards";
 export const Hero = () => {
   return (
     <section
-      className="container grid lg:grid-cols-2 place-items-center py-0 md:py-32 gap-10"
+      className="container grid lg:grid-cols-2 place-items-center py-0 md:py-12 gap-10"
       id="home"
     >
       <div className="text-center lg:text-start space-y-6">

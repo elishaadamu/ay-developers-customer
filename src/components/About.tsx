@@ -3,7 +3,7 @@ import AboutUs from "@/assets/about-us.jpg";
 
 export const About = () => {
   return (
-    <section id="about" className="container  sm:py-32">
+    <section id="about" className="container  sm:py-4">
       <div className="bg-muted/50 border rounded-lg py-12">
         <div className="px-6 flex flex-col-reverse md:flex-row gap-8 md:gap-12">
           <div className="relative">
