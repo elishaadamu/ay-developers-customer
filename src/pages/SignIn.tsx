@@ -61,11 +61,15 @@ export function SignIn() {
         );
 
         console.log("Login response:", response.data);
+        console.log("Login response type:", typeof response.data);
+        console.log("Login response keys:", Object.keys(response.data || {}));
 
         if (response.data) {
           // Store user data in encrypted form if login is successful
           if (response.data) {
+            console.log("About to store user data:", response.data);
             setEncryptedStorage("userData", response.data);
+            console.log("User data stored successfully");
             // Initialize activity tracking after successful login
             initializeActivityTracking();
           }
@@ -74,7 +78,7 @@ export function SignIn() {
 
           // Small delay before redirect to show the success message
           setTimeout(() => {
-            navigate("/");
+            navigate("/user/home");
           }, 1500);
         } else {
           message.error(response.data.message || "Login failed");

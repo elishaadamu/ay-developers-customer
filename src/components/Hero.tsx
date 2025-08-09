@@ -4,11 +4,11 @@ import { HeroCards } from "./HeroCards";
 export const Hero = () => {
   return (
     <section
-      className="container grid lg:grid-cols-2 place-items-center py-0 md:py-12 gap-10"
+      className="container grid lg:grid-cols-2 place-items-center py-14 md:py-12 gap-10"
       id="home"
     >
       <div className="text-center lg:text-start space-y-6">
-        <main className="text-5xl md:text-6xl font-bold">
+        <main className="text-4xl md:text-6xl font-bold">
           <h1 className="inline">
             <span className="inline bg-gradient-to-r from-[#F596D3]  to-[#D247BF] text-transparent bg-clip-text">
               AY CREATIVE

@@ -70,7 +70,8 @@ export const Footer = () => {
 
       <section className="container pb-14 text-center">
         <h3>
-          &copy; 2025 AY CREATIVE TECHNOLOGY. All rights reserved.{" "}
+          &copy; {new Date().getFullYear()} AY CREATIVE TECHNOLOGY. All rights
+          reserved.{" "}
           <a
             rel="noreferrer noopener"
             href="mailto:support@aydevelopers.com.ng"

@@ -19,7 +19,6 @@ export const useActivityTracking = () => {
 
   // Handle logout due to inactivity
   const handleInactivityLogout = useCallback(() => {
-    message.warning("You have been logged out due to inactivity");
     navigate("/signin");
   }, [navigate]);
 

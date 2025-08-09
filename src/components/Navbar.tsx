@@ -57,7 +57,7 @@ export const Navbar = () => {
               <img
                 src={LogoIcon}
                 alt="AY Developers Logo"
-                className="h-full w-[150px] mr-2 dark:invert"
+                className="h-full w-[180px] md:w-[150px] mr-2 dark:invert"
               />
             </Link>
           </NavigationMenuItem>

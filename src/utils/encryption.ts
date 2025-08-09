@@ -13,10 +13,11 @@ const SECRET_KEY =
 export const encryptData = (data: any): string => {
   try {
     const jsonString = typeof data === "string" ? data : JSON.stringify(data);
+
     const encrypted = CryptoJS.AES.encrypt(jsonString, SECRET_KEY).toString();
+
     return encrypted;
   } catch (error) {
-    console.error("Encryption error:", error);
     throw new Error("Failed to encrypt data");
   }
 };
@@ -37,12 +38,13 @@ export const decryptData = (encryptedData: string): any => {
 
     // Try to parse as JSON, if it fails return as string
     try {
-      return JSON.parse(decryptedString);
+      const parsedData = JSON.parse(decryptedString);
+
+      return parsedData;
     } catch {
       return decryptedString;
     }
   } catch (error) {
-    console.error("Decryption error:", error);
     throw new Error("Failed to decrypt data");
   }
 };
@@ -55,9 +57,9 @@ export const decryptData = (encryptedData: string): any => {
 export const setEncryptedStorage = (key: string, data: any): void => {
   try {
     const encryptedData = encryptData(data);
+
     localStorage.setItem(key, encryptedData);
   } catch (error) {
-    console.error("Failed to store encrypted data:", error);
     throw error;
   }
 };
@@ -70,12 +72,15 @@ export const setEncryptedStorage = (key: string, data: any): void => {
 export const getEncryptedStorage = (key: string): any => {
   try {
     const encryptedData = localStorage.getItem(key);
+
     if (!encryptedData) {
       return null;
     }
-    return decryptData(encryptedData);
+
+    const decryptedData = decryptData(encryptedData);
+
+    return decryptedData;
   } catch (error) {
-    console.error("Failed to retrieve encrypted data:", error);
     // If decryption fails, remove the corrupted data
     localStorage.removeItem(key);
     return null;
