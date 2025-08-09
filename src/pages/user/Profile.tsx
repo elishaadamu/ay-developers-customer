@@ -9,7 +9,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -18,18 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import {
-  CalendarDays,
-  Mail,
-  Phone,
-  MapPin,
-  Edit,
-  Save,
-  X,
-  Shield,
-} from "lucide-react";
+import { Mail, Phone, MapPin, Edit, Save, X, Shield } from "lucide-react";
 import { getEncryptedStorage, setEncryptedStorage } from "@/utils/encryption";
 import axios from "axios";
 import { config } from "@/utils/api";

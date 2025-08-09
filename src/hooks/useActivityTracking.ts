@@ -8,7 +8,6 @@ import {
   isAuthenticated,
   isSessionExpired,
 } from "@/utils/auth";
-import { message } from "antd";
 
 /**
  * Custom hook for managing user activity tracking and automatic logout

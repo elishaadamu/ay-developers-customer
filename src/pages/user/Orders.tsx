@@ -29,7 +29,6 @@ import {
   Server,
   Megaphone,
   PenTool,
-  Star,
 } from "lucide-react";
 
 const stats = [

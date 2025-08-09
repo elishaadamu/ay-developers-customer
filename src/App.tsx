@@ -15,8 +15,6 @@ import { Dashboard } from "./pages/user/Dashboard";
 import { Profile } from "./pages/user/Profile";
 import { Products } from "./pages/user/Products";
 import { Tickets } from "./pages/user/Tickets";
-import { Settings } from "./pages/user/Settings";
-import { Orders } from "./pages/user/Orders";
 
 // Component that wraps the routes and provides activity tracking
 function AppRoutes() {
