@@ -6,6 +6,7 @@ export const config = {
     register: "/auth/register",
     updateProfile: "/auth/updateProfile",
     ticket: "/tickets",
+    GetProducts: "/products/",
   },
 };
 
