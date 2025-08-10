@@ -273,9 +273,19 @@ export function Products() {
                             key={item.id}
                             className="flex items-center gap-4 p-4 border rounded-lg"
                           >
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                              <IconComponent className="h-5 w-5" />
-                            </div>
+                            {item.images ? (
+                              <div className="flex h-12 w-12 items-center justify-center rounded-lg overflow-hidden bg-slate-100">
+                                <img
+                                  src={item.images}
+                                  alt={item.name}
+                                  className="h-full w-full object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+                                <IconComponent className="h-5 w-5" />
+                              </div>
+                            )}
                             <div className="flex-1">
                               <h4 className="font-medium">{item.name}</h4>
                               <p className="text-sm text-muted-foreground">
@@ -410,17 +420,37 @@ export function Products() {
             {filteredProducts.map((product) => {
               const IconComponent = product.icon;
               return (
-                <Card key={product.id} className="flex flex-col">
-                  <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                        <IconComponent className="h-5 w-5" />
+                <Card key={product.id} className="flex flex-col overflow-hidden hover:shadow-lg transition-shadow">
+                  {/* Product Image */}
+                  <div className="relative h-48 w-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
+                    {product.images ? (
+                      <img
+                        src={product.images}
+                        alt={product.name}
+                        className="h-full w-full object-cover object-center"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <IconComponent className="h-16 w-16 text-slate-400" />
                       </div>
+                    )}
+                    {product.status === "Active" && (
+                      <Badge
+                        variant="outline"
+                        className="absolute top-3 right-3 text-green-600 border-green-600 bg-white/90 backdrop-blur-sm"
+                      >
+                        Available
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <CardTitle className="text-lg">
+                        <CardTitle className="text-lg line-clamp-1">
                           {product.name}
                         </CardTitle>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2 mt-2">
                           <Badge variant={getStatusVariant(product.status)}>
                             {product.status}
                           </Badge>
@@ -435,7 +465,7 @@ export function Products() {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="flex-1 flex flex-col">
+                  <CardContent className="flex-1 flex flex-col pt-0">
                     <CardDescription className="mb-4">
                       {product.description}
                     </CardDescription>
@@ -457,17 +487,9 @@ export function Products() {
 
                     <div className="mt-auto">
                       <div className="flex items-center justify-between mb-4">
-                        <span className="text-2xl font-bold">
+                        <span className="text-2xl font-bold text-primary">
                           {formatPrice(product.price)}
                         </span>
-                        {product.status === "Active" && (
-                          <Badge
-                            variant="outline"
-                            className="text-green-600 border-green-600"
-                          >
-                            Available
-                          </Badge>
-                        )}
                       </div>
 
                       <div className="flex gap-2">
@@ -485,9 +507,19 @@ export function Products() {
                           <DialogContent className="sm:max-w-[500px]">
                             <DialogHeader>
                               <DialogTitle className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                                  <IconComponent className="h-5 w-5" />
-                                </div>
+                                {product.images ? (
+                                  <div className="flex h-12 w-12 items-center justify-center rounded-lg overflow-hidden bg-slate-100">
+                                    <img
+                                      src={product.images}
+                                      alt={product.name}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+                                    <IconComponent className="h-6 w-6" />
+                                  </div>
+                                )}
                                 {product.name}
                               </DialogTitle>
                               <DialogDescription>
@@ -495,6 +527,15 @@ export function Products() {
                               </DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
+                              {product.images && (
+                                <div className="relative h-40 w-full bg-slate-100 rounded-lg overflow-hidden">
+                                  <img
+                                    src={product.images}
+                                    alt={product.name}
+                                    className="h-full w-full object-cover object-center"
+                                  />
+                                </div>
+                              )}
                               <div>
                                 <h4 className="font-medium mb-2">
                                   Key Features:
@@ -567,7 +608,7 @@ export function Products() {
                         </Dialog>
                         <Button
                           size="sm"
-                          className="flex-1 gap-2"
+                          className="flex-1 gap-2 bg-primary hover:bg-primary/90"
                           disabled={product.status !== "Active"}
                           onClick={() => addToCart(product, 1)}
                         >

@@ -31,6 +31,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { getEncryptedStorage } from "@/utils/encryption";
+import config from "@/utils/api";
 import {
   getOrdersData,
   getDashboardStats,
@@ -49,6 +50,8 @@ export function Dashboard() {
     openTickets: 0,
     totalOrders: 0,
     totalTickets: 0,
+    availableProducts: 0,
+    totalAvailableTickets: 0,
   });
 
   // Load user data and dashboard data on component mount
@@ -62,12 +65,44 @@ export function Dashboard() {
           setUserData(loadedUserData);
         }
 
-        // Load orders and tickets data
+        // Load orders and tickets data from localStorage
         const ordersData = getOrdersData();
         const stats = getDashboardStats();
 
+        // Fetch products from API
+        let availableProducts = 0;
+        try {
+          const productsResponse = await fetch(
+            `${config.apiBaseUrl}${config.endpoints.GetProducts}`
+          );
+          if (productsResponse.ok) {
+            const products = await productsResponse.json();
+            availableProducts = products.length;
+          }
+        } catch (error) {
+          console.error("Error fetching products:", error);
+        }
+
+        // Fetch tickets from API
+        let totalAvailableTickets = 0;
+        try {
+          const ticketsResponse = await fetch(
+            `${config.apiBaseUrl}${config.endpoints.ticket}`
+          );
+          if (ticketsResponse.ok) {
+            const tickets = await ticketsResponse.json();
+            totalAvailableTickets = tickets.length;
+          }
+        } catch (error) {
+          console.error("Error fetching tickets:", error);
+        }
+
         setOrders(ordersData);
-        setDashboardStats(stats);
+        setDashboardStats({
+          ...stats,
+          availableProducts,
+          totalAvailableTickets,
+        });
       } catch (error) {
         console.error("Error loading dashboard data:", error);
       } finally {
@@ -95,18 +130,21 @@ export function Dashboard() {
       icon: ShoppingCart,
     },
     {
-      title: "Completed Orders",
-      value: dashboardStats.completedOrders.toString(),
-      change: dashboardStats.completedOrders > 0 ? "+100%" : "0%",
+      title: "Available Products",
+      value: dashboardStats.availableProducts.toString(),
+      change: dashboardStats.availableProducts > 0 ? "+100%" : "0%",
       trend: "up" as const,
-      icon: Activity,
+      icon: BarChart3,
     },
     {
-      title: "Support Tickets",
-      value: dashboardStats.openTickets.toString(),
+      title: "Total Tickets",
+      value: dashboardStats.totalAvailableTickets.toString(),
       change:
-        dashboardStats.openTickets > 0 ? `+${dashboardStats.openTickets}` : "0",
-      trend: dashboardStats.openTickets > 0 ? "up" : ("down" as const),
+        dashboardStats.totalAvailableTickets > 0
+          ? `+${dashboardStats.totalAvailableTickets}`
+          : "0",
+      trend:
+        dashboardStats.totalAvailableTickets > 0 ? "up" : ("down" as const),
       icon: Users,
     },
   ];
@@ -214,7 +252,7 @@ export function Dashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-3 bg-primary/5 rounded-lg">
                 <ShoppingCart className="h-6 w-6 mx-auto mb-1 text-primary" />
                 <p className="text-sm font-medium">Orders Completed</p>
@@ -234,6 +272,13 @@ export function Dashboard() {
                 <p className="text-sm font-medium">Total Spent</p>
                 <p className="text-lg font-bold">
                   {formatPrice(dashboardStats.totalSpent)}
+                </p>
+              </div>
+              <div className="text-center p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
+                <BarChart3 className="h-6 w-6 mx-auto mb-1 text-purple-600" />
+                <p className="text-sm font-medium">Products Available</p>
+                <p className="text-lg font-bold">
+                  {dashboardStats.availableProducts}
                 </p>
               </div>
             </div>
