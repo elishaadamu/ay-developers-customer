@@ -4,6 +4,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import { App as AntApp } from "antd";
 import { Home } from "./pages/Home";
 import { SignIn } from "./pages/SignIn";
 import { SignUp } from "./pages/SignUp";
@@ -14,7 +15,12 @@ import { UserLayout } from "./pages/user/UserLayout";
 import { Dashboard } from "./pages/user/Dashboard";
 import { Profile } from "./pages/user/Profile";
 import { Products } from "./pages/user/Products";
+import { Orders } from "./pages/user/Orders";
 import { Tickets } from "./pages/user/Tickets";
+import { Support } from "./pages/user/Support";
+
+import { CartProvider } from "./contexts/CartContext";
+import { ThemeProvider } from "./components/theme-provider";
 
 // Component that wraps the routes and provides activity tracking
 function AppRoutes() {
@@ -58,6 +64,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/user/orders"
+        element={
+          <UserLayout>
+            <Orders />
+          </UserLayout>
+        }
+      />
+      <Route
         path="/user/tickets"
         element={
           <UserLayout>
@@ -66,15 +80,15 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/user/settings"
+        path="/user/support"
         element={
           <UserLayout>
-            <Tickets />
+            <Support />
           </UserLayout>
         }
       />
       <Route
-        path="/user/orders"
+        path="/user/settings"
         element={
           <UserLayout>
             <Tickets />
@@ -87,9 +101,15 @@ function AppRoutes() {
 
 function App() {
   return (
-    <Router>
-      <AppRoutes />
-    </Router>
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      <AntApp>
+        <CartProvider>
+          <Router>
+            <AppRoutes />
+          </Router>
+        </CartProvider>
+      </AntApp>
+    </ThemeProvider>
   );
 }
 

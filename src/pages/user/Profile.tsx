@@ -7,6 +7,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { Loading } from "@/components/ui/loading";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -109,6 +111,7 @@ interface UpdateProfilePayload {
 export function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [userData, setUserData] = useState<ApiUserData | null>(null);
   const [profile, setProfile] = useState<UserProfile>({
     firstName: "John",
@@ -125,38 +128,45 @@ export function Profile() {
 
   // Load user data from localStorage on component mount
   useEffect(() => {
-    try {
-      const loadedUserData: ApiUserData = getEncryptedStorage("userData");
-      console.log("[Profile] Retrieved user data:", loadedUserData);
+    const loadUserData = async () => {
+      setIsInitialLoading(true);
+      try {
+        const loadedUserData: ApiUserData = getEncryptedStorage("userData");
+        console.log("[Profile] Retrieved user data:", loadedUserData);
 
-      if (loadedUserData) {
-        setUserData(loadedUserData);
+        if (loadedUserData) {
+          setUserData(loadedUserData);
 
-        // Update profile with real user data
-        const updatedProfile: UserProfile = {
-          firstName: loadedUserData.firstName || "User",
-          lastName: loadedUserData.lastName || "",
-          email: loadedUserData.email || "user@example.com",
-          phone: loadedUserData.phone || "07067206984",
-          country:
-            loadedUserData.location || loadedUserData.address || "Nigeria",
-          state: loadedUserData.state || "Lagos",
-          avatar: "https://github.com/shadcn.png",
-          role: loadedUserData.role || "user",
-        };
+          // Update profile with real user data
+          const updatedProfile: UserProfile = {
+            firstName: loadedUserData.firstName || "User",
+            lastName: loadedUserData.lastName || "",
+            email: loadedUserData.email || "user@example.com",
+            phone: loadedUserData.phone || "07067206984",
+            country:
+              loadedUserData.location || loadedUserData.address || "Nigeria",
+            state: loadedUserData.state || "Lagos",
+            avatar: "https://github.com/shadcn.png",
+            role: loadedUserData.role || "user",
+          };
 
-        console.log(
-          "[Profile] Updated profile with user data:",
-          updatedProfile
-        );
-        setProfile(updatedProfile);
-        setEditedProfile(updatedProfile);
-      } else {
-        console.log("[Profile] No user data found, using default profile");
+          console.log(
+            "[Profile] Updated profile with user data:",
+            updatedProfile
+          );
+          setProfile(updatedProfile);
+          setEditedProfile(updatedProfile);
+        } else {
+          console.log("[Profile] No user data found, using default profile");
+        }
+      } catch (error) {
+        console.error("[Profile] Error loading user data:", error);
+      } finally {
+        setIsInitialLoading(false);
       }
-    } catch (error) {
-      console.error("[Profile] Error loading user data:", error);
-    }
+    };
+
+    loadUserData();
   }, []);
 
   const handleSave = async () => {
@@ -239,8 +249,19 @@ export function Profile() {
     setIsEditing(false);
   };
 
+  // Show loading screen while initial data loads
+  if (isInitialLoading) {
+    return (
+      <div className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+        <Loading size="lg" text="Loading profile..." />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+    <div className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 relative">
+      {isLoading && <Loading overlay text="Saving profile changes..." />}
+
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold md:text-2xl">Profile</h1>
         <Button
@@ -273,7 +294,7 @@ export function Profile() {
                   src={profile.avatar}
                   alt={`${profile.firstName} ${profile.lastName}`}
                 />
-                <AvatarFallback className="text-3xl">
+                <AvatarFallback className="text-3xl bg-blue-600 text-white font-semibold">
                   {profile.firstName[0]}
                   {profile.lastName[0]}
                 </AvatarFallback>
@@ -320,9 +341,14 @@ export function Profile() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-3 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border">
+                <Label
+                  htmlFor="firstName"
+                  className="text-sm font-semibold text-gray-700 dark:text-gray-300"
+                >
+                  First Name
+                </Label>
                 {isEditing ? (
                   <Input
                     id="firstName"
@@ -333,13 +359,21 @@ export function Profile() {
                         firstName: e.target.value,
                       })
                     }
+                    className="border-2 focus:border-blue-500"
                   />
                 ) : (
-                  <p className="text-sm">{profile.firstName}</p>
+                  <p className="text-sm font-medium px-3 py-2 bg-white dark:bg-gray-800 rounded border">
+                    {profile.firstName}
+                  </p>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
+              <div className="space-y-3 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border">
+                <Label
+                  htmlFor="lastName"
+                  className="text-sm font-semibold text-gray-700 dark:text-gray-300"
+                >
+                  Last Name
+                </Label>
                 {isEditing ? (
                   <Input
                     id="lastName"
@@ -350,13 +384,21 @@ export function Profile() {
                         lastName: e.target.value,
                       })
                     }
+                    className="border-2 focus:border-blue-500"
                   />
                 ) : (
-                  <p className="text-sm">{profile.lastName}</p>
+                  <p className="text-sm font-medium px-3 py-2 bg-white dark:bg-gray-800 rounded border">
+                    {profile.lastName}
+                  </p>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+              <div className="space-y-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <Label
+                  htmlFor="email"
+                  className="text-sm font-semibold text-blue-700 dark:text-blue-300"
+                >
+                  Email Address
+                </Label>
                 {isEditing ? (
                   <Input
                     id="email"
@@ -368,13 +410,21 @@ export function Profile() {
                         email: e.target.value,
                       })
                     }
+                    className="border-2 focus:border-blue-500"
                   />
                 ) : (
-                  <p className="text-sm">{profile.email}</p>
+                  <p className="text-sm font-medium px-3 py-2 bg-white dark:bg-gray-800 rounded border">
+                    {profile.email}
+                  </p>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
+              <div className="space-y-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <Label
+                  htmlFor="phone"
+                  className="text-sm font-semibold text-green-700 dark:text-green-300"
+                >
+                  Phone Number
+                </Label>
                 {isEditing ? (
                   <Input
                     id="phone"
@@ -385,13 +435,21 @@ export function Profile() {
                         phone: e.target.value,
                       })
                     }
+                    className="border-2 focus:border-green-500"
                   />
                 ) : (
-                  <p className="text-sm">{profile.phone}</p>
+                  <p className="text-sm font-medium px-3 py-2 bg-white dark:bg-gray-800 rounded border">
+                    {profile.phone}
+                  </p>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="country">Country</Label>
+              <div className="space-y-3 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                <Label
+                  htmlFor="country"
+                  className="text-sm font-semibold text-purple-700 dark:text-purple-300"
+                >
+                  Country
+                </Label>
                 {isEditing ? (
                   <Input
                     id="country"
@@ -402,13 +460,21 @@ export function Profile() {
                         country: e.target.value,
                       })
                     }
+                    className="border-2 focus:border-purple-500"
                   />
                 ) : (
-                  <p className="text-sm">{profile.country}</p>
+                  <p className="text-sm font-medium px-3 py-2 bg-white dark:bg-gray-800 rounded border">
+                    {profile.country}
+                  </p>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="state">State</Label>
+              <div className="space-y-3 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                <Label
+                  htmlFor="state"
+                  className="text-sm font-semibold text-orange-700 dark:text-orange-300"
+                >
+                  State/Province
+                </Label>
                 {isEditing ? (
                   <Select
                     value={editedProfile.state}
@@ -419,7 +485,7 @@ export function Profile() {
                       })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="border-2 focus:border-orange-500">
                       <SelectValue placeholder="Select a state" />
                     </SelectTrigger>
                     <SelectContent>
@@ -431,21 +497,24 @@ export function Profile() {
                     </SelectContent>
                   </Select>
                 ) : (
-                  <p className="text-sm">{profile.state}</p>
+                  <p className="text-sm font-medium px-3 py-2 bg-white dark:bg-gray-800 rounded border">
+                    {profile.state}
+                  </p>
                 )}
               </div>
             </div>
 
             {isEditing && (
               <div className="flex gap-4 pt-4">
-                <Button
+                <LoadingButton
                   onClick={handleSave}
                   className="gap-2"
-                  disabled={isLoading}
+                  loading={isLoading}
+                  loadingText="Saving..."
                 >
                   <Save className="h-4 w-4" />
-                  {isLoading ? "Saving..." : "Save Changes"}
-                </Button>
+                  Save Changes
+                </LoadingButton>
                 <Button
                   variant="outline"
                   onClick={handleCancel}

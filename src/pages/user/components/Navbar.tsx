@@ -89,7 +89,7 @@ export function UserNavbar() {
   };
 
   return (
-    <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
+    <header className="flex h-14 items-center p-10 gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
       {/* Search */}
       <div className="w-full flex-1">
         <form>
@@ -110,7 +110,7 @@ export function UserNavbar() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon" className="relative">
-              <Bell className="h-4 w-4" />
+              <Bell className="h-4 w-4 text-black dark:text-white" />
               <Badge
                 variant="destructive"
                 className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
@@ -151,13 +151,15 @@ export function UserNavbar() {
         </DropdownMenu>
 
         {/* Theme Toggle */}
-        <ModeToggle />
+        <span className="text-black dark:text-white border-1">
+          <ModeToggle />
+        </span>
 
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="secondary" size="icon" className="rounded-full">
-              <Avatar className="h-8 w-8">
+            <Button variant="secondary" size="icon" className="rounded-full ">
+              <Avatar className="h-8 w-8 ">
                 <AvatarImage
                   src={
                     userData?.avatar ||
@@ -166,7 +168,9 @@ export function UserNavbar() {
                   }
                   alt={getUserName()}
                 />
-                <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                <AvatarFallback className="bg-blue-600 text-white font-semibold">
+                  {getUserInitials()}
+                </AvatarFallback>
               </Avatar>
               <span className="sr-only">Toggle user menu</span>
             </Button>
@@ -187,13 +191,13 @@ export function UserNavbar() {
             >
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem
+            {/* <DropdownMenuItem
               onClick={handleSettingsClick}
               className="cursor-pointer"
             >
               Settings
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator /> */}
             <DropdownMenuItem
               onClick={handleLogout}
               className="cursor-pointer text-destructive"

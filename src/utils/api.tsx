@@ -4,7 +4,7 @@ export const config = {
   endpoints: {
     login: "/auth/login",
     register: "/auth/register",
-    updateProfile: "/auth/updateUserProfile",
+    updateProfile: "/auth/updateProfile",
     ticket: "/tickets",
   },
 };

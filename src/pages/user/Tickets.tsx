@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { Loading } from "@/components/ui/loading";
 import {
   Card,
   CardContent,
@@ -49,10 +51,10 @@ import {
   AlertCircle,
   MoreHorizontal,
   Eye,
-  Edit,
 } from "lucide-react";
 import { getEncryptedStorage } from "@/utils/encryption";
 import { config } from "@/utils/api";
+import { setTicketsData } from "@/utils/dashboardData";
 import axios from "axios";
 
 interface Ticket {
@@ -114,11 +116,11 @@ export function Tickets() {
   const [activeTab, setActiveTab] = useState<string>("open");
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [isNewTicketOpen, setIsNewTicketOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [userData, setUserData] = useState<{
     firstName: string;
@@ -134,10 +136,6 @@ export function Tickets() {
     subject: "",
     description: "",
     priority: "medium",
-  });
-  const [updateTicket, setUpdateTicket] = useState({
-    reply: "",
-    status: "open" as const,
   });
 
   // Simple message function
@@ -172,6 +170,9 @@ export function Tickets() {
   // Fetch tickets from API
   const fetchTickets = async () => {
     setLoading(true);
+    if (initialLoading) {
+      setInitialLoading(true);
+    }
     try {
       console.log("🔄 Fetching tickets from API...");
       const response = await axios.get(
@@ -185,6 +186,7 @@ export function Tickets() {
       console.log("📊 Tickets data:", ticketsData);
 
       setTickets(ticketsData);
+      setTicketsData(ticketsData); // Store in localStorage for dashboard
     } catch (error) {
       console.error("❌ Error fetching tickets:", error);
       showMessage("error", "Failed to fetch tickets");
@@ -192,6 +194,9 @@ export function Tickets() {
       setTickets(mockTickets);
     } finally {
       setLoading(false);
+      if (initialLoading) {
+        setInitialLoading(false);
+      }
     }
   };
 
@@ -255,139 +260,11 @@ export function Tickets() {
     }
   };
 
-  // Update ticket
-  const handleUpdateTicket = async () => {
-    if (!selectedTicket) return;
-
-    // Only allow updates for open tickets
-    if (selectedTicket.status === "closed") {
-      showMessage("warning", "Cannot update closed tickets");
-      return;
-    }
-
-    if (!updateTicket.reply) {
-      showMessage("error", "Please enter a reply");
-      return;
-    }
-
-    try {
-      const ticketId = selectedTicket._id || selectedTicket.id;
-
-      const payload = {
-        status: updateTicket.status,
-        reply: updateTicket.reply,
-        updatedAt: new Date().toISOString(),
-      };
-
-      console.log("🔄 Updating ticket with payload:", payload);
-
-      const response = await axios.patch(
-        `${config.apiBaseUrl}${config.endpoints.ticket}/${ticketId}/status`,
-        payload
-      );
-
-      console.log("✅ Ticket updated successfully:", response.data);
-
-      showMessage("success", "Ticket has been updated successfully");
-
-      setIsUpdateModalOpen(false);
-      setUpdateTicket({ reply: "", status: "open" });
-      setSelectedTicket(null);
-      await fetchTickets();
-    } catch (error: any) {
-      console.error("❌ Error updating ticket:", error);
-      showMessage(
-        "error",
-        error.response?.data?.message || "Failed to update ticket"
-      );
-    }
-  };
-
-  // Close ticket
-  const handleCloseTicket = async (ticket: Ticket) => {
-    try {
-      const ticketId = ticket._id || ticket.id;
-      console.log("🔄 Closing ticket:", ticketId);
-
-      const payload = {
-        status: "closed",
-        updatedAt: new Date().toISOString(),
-      };
-
-      console.log("🔄 Sending close payload to API:", payload);
-
-      const response = await axios.patch(
-        `${config.apiBaseUrl}${config.endpoints.ticket}/${ticketId}/status`,
-        payload
-      );
-
-      console.log("✅ Ticket closed successfully:", response.data);
-
-      showMessage("success", "Ticket has been closed successfully");
-
-      await fetchTickets();
-    } catch (error: any) {
-      console.error("❌ Error closing ticket:", error);
-      showMessage(
-        "error",
-        error.response?.data?.message || "Failed to close ticket"
-      );
-    }
-  };
-
-  // Reopen ticket
-  const handleReopenTicket = async (ticket: Ticket) => {
-    try {
-      const ticketId = ticket._id || ticket.id;
-      console.log("🔄 Reopening ticket:", ticketId);
-
-      const payload = {
-        status: "open",
-        updatedAt: new Date().toISOString(),
-      };
-
-      console.log("🔄 Sending reopen payload to API:", payload);
-
-      const response = await axios.patch(
-        `${config.apiBaseUrl}${config.endpoints.ticket}/${ticketId}/status`,
-        payload
-      );
-
-      console.log("✅ Ticket reopened successfully:", response.data);
-
-      showMessage("success", "Ticket has been reopened successfully");
-
-      await fetchTickets();
-    } catch (error: any) {
-      console.error("❌ Error reopening ticket:", error);
-      showMessage(
-        "error",
-        error.response?.data?.message || "Failed to reopen ticket"
-      );
-    }
-  };
-
   // Handle view ticket
   const handleViewTicket = (ticket: Ticket) => {
     console.log("👁️ Viewing ticket:", ticket);
     setSelectedTicket(ticket);
     setIsViewModalOpen(true);
-  };
-
-  // Handle update click
-  const handleUpdateClick = (ticket: Ticket) => {
-    if (ticket.status === "closed") {
-      showMessage("warning", "Cannot update closed tickets");
-      return;
-    }
-
-    console.log("✏️ Opening update modal for ticket:", ticket);
-    setSelectedTicket(ticket);
-    setUpdateTicket({
-      reply: "",
-      status: ticket.status,
-    });
-    setIsUpdateModalOpen(true);
   };
 
   useEffect(() => {
@@ -435,8 +312,21 @@ export function Tickets() {
     }
   };
 
+  // Show loading screen while initial data loads
+  if (initialLoading) {
+    return (
+      <div className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+        <Loading size="lg" text="Loading tickets..." />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+    <div className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 relative">
+      {loading && !initialLoading && (
+        <Loading overlay text="Loading tickets..." />
+      )}
+
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold md:text-2xl">Support Tickets</h1>
         <div className="flex items-center gap-4">
@@ -516,12 +406,17 @@ export function Tickets() {
                 <Button
                   variant="outline"
                   onClick={() => setIsNewTicketOpen(false)}
+                  disabled={loading}
                 >
                   Cancel
                 </Button>
-                <Button onClick={handleCreateTicket} disabled={loading}>
-                  {loading ? "Creating..." : "Create Ticket"}
-                </Button>
+                <LoadingButton
+                  onClick={handleCreateTicket}
+                  loading={loading}
+                  loadingText="Creating..."
+                >
+                  Create Ticket
+                </LoadingButton>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -657,18 +552,6 @@ export function Tickets() {
                                 <Eye className="mr-2 h-4 w-4" />
                                 View
                               </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleUpdateClick(ticket)}
-                              >
-                                <Edit className="mr-2 h-4 w-4" />
-                                Update
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleCloseTicket(ticket)}
-                              >
-                                <CheckCircle className="mr-2 h-4 w-4" />
-                                Close
-                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -768,12 +651,6 @@ export function Tickets() {
                               >
                                 <Eye className="mr-2 h-4 w-4" />
                                 View
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleReopenTicket(ticket)}
-                              >
-                                <Edit className="mr-2 h-4 w-4" />
-                                Reopen
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -888,57 +765,6 @@ export function Tickets() {
               </div>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Update Ticket Modal */}
-      <Dialog open={isUpdateModalOpen} onOpenChange={setIsUpdateModalOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Update Ticket</DialogTitle>
-            <DialogDescription>
-              Add a reply to update the ticket status.
-            </DialogDescription>
-          </DialogHeader>
-          {selectedTicket && (
-            <div className="grid gap-4 py-4">
-              <div>
-                <Label className="text-sm font-medium">
-                  Ticket: {selectedTicket.subject}
-                </Label>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {selectedTicket.description}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="reply">Reply *</Label>
-                <Textarea
-                  id="reply"
-                  value={updateTicket.reply}
-                  onChange={(e) =>
-                    setUpdateTicket({ ...updateTicket, reply: e.target.value })
-                  }
-                  placeholder="Enter your reply to the ticket..."
-                  rows={4}
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsUpdateModalOpen(false);
-                setUpdateTicket({ reply: "", status: "open" });
-                setSelectedTicket(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleUpdateTicket} disabled={loading}>
-              {loading ? "Updating..." : "Update Ticket"}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

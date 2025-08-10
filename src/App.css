@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Ant Design styles */
+@import "~antd/dist/reset.css";
+
 /* *=========== Default theme =========== */
 /* @layer base {
   :root {

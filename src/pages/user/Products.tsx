@@ -1,6 +1,17 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Card,
   CardContent,
@@ -23,11 +34,14 @@ import {
   ShoppingCart,
   Star,
   Globe,
-  Smartphone,
-  Server,
-  Megaphone,
-  PenTool,
+  CloudDrizzle,
+  Settings,
+  MoreHorizontal,
+  Plus,
+  Minus,
+  X,
 } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
 
 interface Product {
   id: string;
@@ -42,122 +56,99 @@ interface Product {
   icon: React.ComponentType<any>;
 }
 
-const mockProducts: Product[] = [
+const availableProducts: Product[] = [
   {
-    id: "PRD-001",
-    name: "Professional Website Package",
+    id: "PROD-001",
+    name: "Reseller Hosting",
     description:
-      "Complete website development with modern design, responsive layout, and SEO optimization",
-    category: "Website Development",
-    price: 299999,
+      "Start your own hosting business with our reseller hosting packages",
+    category: "Hosting",
+    price: 15000,
     status: "Active",
     rating: 4.8,
-    reviews: 124,
+    reviews: 142,
+    features: [
+      "WHM Control Panel",
+      "Unlimited Domains",
+      "24/7 Support",
+      "Free SSL Certificates",
+    ],
+    icon: CloudDrizzle,
+  },
+  {
+    id: "PROD-002",
+    name: "Website Development",
+    description:
+      "Professional website development with modern design and functionality",
+    category: "Development",
+    price: 250000,
+    status: "Active",
+    rating: 4.9,
+    reviews: 89,
     features: [
       "Responsive Design",
       "SEO Optimized",
       "Content Management",
-      "Analytics Integration",
+      "Performance Optimization",
     ],
     icon: Globe,
   },
   {
-    id: "PRD-002",
-    name: "Mobile App Development",
-    description:
-      "Cross-platform mobile application development for iOS and Android",
-    category: "App Development",
-    price: 599999,
-    status: "Active",
-    rating: 4.9,
-    reviews: 87,
-    features: [
-      "Cross-Platform",
-      "Native Performance",
-      "Push Notifications",
-      "App Store Deployment",
-    ],
-    icon: Smartphone,
-  },
-  {
-    id: "PRD-003",
-    name: "Premium Hosting Services",
-    description:
-      "High-performance web hosting with 99.9% uptime guarantee and 24/7 support",
-    category: "Hosting",
-    price: 25000,
+    id: "PROD-003",
+    name: "Console Management",
+    description: "Advanced server and application console management services",
+    category: "Management",
+    price: 50000,
     status: "Active",
     rating: 4.7,
-    reviews: 256,
-    features: [
-      "99.9% Uptime",
-      "SSL Certificate",
-      "Daily Backups",
-      "24/7 Support",
-    ],
-    icon: Server,
-  },
-  {
-    id: "PRD-004",
-    name: "Digital Marketing Suite",
-    description:
-      "Complete digital marketing package including SEO, social media, and PPC campaigns",
-    category: "Digital Marketing",
-    price: 150000,
-    status: "Active",
-    rating: 4.6,
-    reviews: 93,
-    features: [
-      "SEO Optimization",
-      "Social Media Management",
-      "PPC Campaigns",
-      "Analytics Reports",
-    ],
-    icon: Megaphone,
-  },
-  {
-    id: "PRD-005",
-    name: "Content Creation Package",
-    description:
-      "Professional content creation including copywriting, graphics, and video production",
-    category: "Content Creation",
-    price: 75000,
-    status: "Active",
-    rating: 4.8,
     reviews: 67,
     features: [
-      "Professional Copywriting",
-      "Graphic Design",
-      "Video Production",
-      "Brand Guidelines",
+      "Server Monitoring",
+      "Automated Backups",
+      "Security Management",
+      "24/7 Monitoring",
     ],
-    icon: PenTool,
+    icon: Settings,
   },
   {
-    id: "PRD-006",
-    name: "AI-Powered Analytics Tool",
+    id: "PROD-004",
+    name: "Others",
     description:
-      "Advanced analytics platform with AI insights and predictive modeling",
-    category: "AI Tools",
-    price: 99999,
-    status: "Coming Soon",
-    rating: 0,
-    reviews: 0,
+      "Custom solutions and specialized services tailored to your needs",
+    category: "Custom",
+    price: 100000,
+    status: "Active",
+    rating: 4.6,
+    reviews: 45,
     features: [
-      "AI Insights",
-      "Predictive Analytics",
-      "Real-time Dashboards",
-      "Custom Reports",
+      "Custom Development",
+      "Consultation Services",
+      "Technical Support",
+      "Project Management",
     ],
-    icon: Star,
+    icon: MoreHorizontal,
   },
 ];
 
 export function Products() {
-  const [products] = useState<Product[]>(mockProducts);
+  const navigate = useNavigate();
+  const [products] = useState<Product[]>(availableProducts);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const [addingToCart, setAddingToCart] = useState<string | null>(null);
+
+  // Use cart context
+  const {
+    cart,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    getTotalPrice,
+    getTotalItems,
+  } = useCart();
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch =
@@ -199,10 +190,118 @@ export function Products() {
         <h1 className="text-lg font-semibold md:text-2xl">
           Products & Services
         </h1>
-        <Button className="gap-2">
-          <ShoppingCart className="h-4 w-4" />
-          View Cart
-        </Button>
+        <Dialog open={isCartOpen} onOpenChange={setIsCartOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2 relative">
+              <ShoppingCart className="h-4 w-4" />
+              View Cart
+              {getTotalItems() > 0 && (
+                <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                  {getTotalItems()}
+                </Badge>
+              )}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Shopping Cart</DialogTitle>
+              <DialogDescription>
+                Review your selected products and quantities
+              </DialogDescription>
+            </DialogHeader>
+            <div className="max-h-[400px] overflow-y-auto">
+              {cart.length === 0 ? (
+                <div className="text-center py-8">
+                  <ShoppingCart className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-muted-foreground">Your cart is empty</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {cart.map((item) => {
+                    const IconComponent = item.icon;
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex items-center gap-4 p-4 border rounded-lg"
+                      >
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                          <IconComponent className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium">{item.name}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {formatPrice(item.price)} each
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              updateQuantity(item.id, item.quantity - 1)
+                            }
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span className="w-8 text-center">
+                            {item.quantity}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              updateQuantity(item.id, item.quantity + 1)
+                            }
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium">
+                            {formatPrice(item.price * item.quantity)}
+                          </p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeFromCart(item.id)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            {cart.length > 0 && (
+              <DialogFooter className="flex flex-col gap-4">
+                <div className="flex justify-between items-center text-lg font-semibold">
+                  <span>Total: {formatPrice(getTotalPrice())}</span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsCartOpen(false)}
+                    className="flex-1"
+                  >
+                    Continue Shopping
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    onClick={() => {
+                      setIsCartOpen(false);
+                      navigate("/user/orders");
+                    }}
+                  >
+                    Proceed to Checkout
+                  </Button>
+                </div>
+              </DialogFooter>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Filters and Search */}
@@ -314,18 +413,103 @@ export function Products() {
                   </div>
 
                   <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 gap-2"
-                    >
-                      <Eye className="h-4 w-4" />
-                      View Details
-                    </Button>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 gap-2"
+                        >
+                          <Eye className="h-4 w-4" />
+                          View Details
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[500px]">
+                        <DialogHeader>
+                          <DialogTitle className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                              <IconComponent className="h-5 w-5" />
+                            </div>
+                            {product.name}
+                          </DialogTitle>
+                          <DialogDescription>
+                            {product.description}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                          <div>
+                            <h4 className="font-medium mb-2">Key Features:</h4>
+                            <div className="grid gap-2">
+                              {product.features.map((feature, index) => (
+                                <div
+                                  key={index}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Star className="h-4 w-4 text-primary" />
+                                  <span className="text-sm">{feature}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div>
+                              <label className="text-sm font-medium">
+                                Quantity:
+                              </label>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    setQuantity(Math.max(1, quantity - 1))
+                                  }
+                                >
+                                  <Minus className="h-3 w-3" />
+                                </Button>
+                                <span className="w-8 text-center">
+                                  {quantity}
+                                </span>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setQuantity(quantity + 1)}
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="flex-1 text-right">
+                              <div className="text-2xl font-bold">
+                                {formatPrice(product.price * quantity)}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {formatPrice(product.price)} each
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button
+                            className="flex-1 gap-2"
+                            onClick={() => {
+                              addToCart(product, quantity);
+                              setQuantity(1);
+                            }}
+                            disabled={product.status !== "Active"}
+                          >
+                            <ShoppingCart className="h-4 w-4" />
+                            {product.status === "Active"
+                              ? `Add ${quantity} to Cart`
+                              : "Not Available"}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                     <Button
                       size="sm"
                       className="flex-1 gap-2"
                       disabled={product.status !== "Active"}
+                      onClick={() => addToCart(product, 1)}
                     >
                       <ShoppingCart className="h-4 w-4" />
                       {product.status === "Active"

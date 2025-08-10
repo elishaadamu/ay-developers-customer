@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Card,
@@ -10,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { config } from "@/utils/api";
 import { setEncryptedStorage } from "@/utils/encryption";
 import { initializeActivityTracking } from "@/utils/auth";
@@ -181,9 +181,14 @@ export function SignIn() {
                 </button>
               </div>
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign In"}
-            </Button>
+            <LoadingButton
+              type="submit"
+              className="w-full"
+              loading={isLoading}
+              loadingText="Signing in..."
+            >
+              Sign In
+            </LoadingButton>
           </form>
 
           <div className="mt-6 text-center">
