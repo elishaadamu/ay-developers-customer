@@ -33,7 +33,6 @@ import {
 import { getEncryptedStorage } from "@/utils/encryption";
 import {
   getOrdersData,
-  getTicketsData,
   getDashboardStats,
   formatPrice,
   type OrderItem,
