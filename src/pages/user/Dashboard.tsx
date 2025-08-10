@@ -29,7 +29,6 @@ import {
   PieChart,
   Globe,
   Calendar,
-  Clock,
 } from "lucide-react";
 import { getEncryptedStorage } from "@/utils/encryption";
 import {
@@ -38,14 +37,12 @@ import {
   getDashboardStats,
   formatPrice,
   type OrderItem,
-  type TicketItem,
 } from "@/utils/dashboardData";
 
 export function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [userData, setUserData] = useState<any>(null);
   const [orders, setOrders] = useState<OrderItem[]>([]);
-  const [tickets, setTickets] = useState<TicketItem[]>([]);
   const [dashboardStats, setDashboardStats] = useState({
     totalSpent: 0,
     activeOrders: 0,
@@ -68,11 +65,9 @@ export function Dashboard() {
 
         // Load orders and tickets data
         const ordersData = getOrdersData();
-        const ticketsData = getTicketsData();
         const stats = getDashboardStats();
 
         setOrders(ordersData);
-        setTickets(ticketsData);
         setDashboardStats(stats);
       } catch (error) {
         console.error("Error loading dashboard data:", error);

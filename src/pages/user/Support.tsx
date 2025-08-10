@@ -24,7 +24,6 @@ import {
   Mail,
   MessageCircle,
   Clock,
-  Users,
   HelpCircle,
   FileText,
   Headphones,

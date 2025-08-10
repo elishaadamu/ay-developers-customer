@@ -9,8 +9,6 @@ import {
   User,
   Menu,
   Package,
-  BarChart3,
-  Settings,
   HelpCircle,
   LogOut,
 } from "lucide-react";

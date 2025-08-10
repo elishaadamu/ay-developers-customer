@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Card,
   CardContent,
@@ -138,7 +137,6 @@ export function Products() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
-  const [addingToCart, setAddingToCart] = useState<string | null>(null);
 
   // Use cart context
   const {

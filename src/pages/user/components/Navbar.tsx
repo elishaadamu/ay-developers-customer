@@ -59,11 +59,6 @@ export function UserNavbar() {
     navigate("/user/profile");
   };
 
-  // Handle settings navigation
-  const handleSettingsClick = () => {
-    navigate("/user/settings");
-  };
-
   // Get user initials for avatar fallback
   const getUserInitials = () => {
     if (userData?.firstName && userData?.lastName) {
