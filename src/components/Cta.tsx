@@ -6,7 +6,7 @@ export const Cta = () => {
     <section id="cta" className="bg-muted/50 py-10 my-12 sm:my-12">
       <div className="container lg:grid lg:grid-cols-2 place-items-center">
         <div className="lg:col-start-1">
-          <h2 className="text-3xl md:text-4xl font-bold ">
+          <h2 className="text-3xl md:text-4xl font-bold dark:text-white">
             Ready to Transform
             <span className="bg-gradient-to-b from-primary/60 to-primary text-transparent bg-clip-text">
               {" "}
@@ -27,7 +27,10 @@ export const Cta = () => {
               Get Started Today
             </Button>
           </Link>
-          <Button variant="outline" className="w-full md:w-auto">
+          <Button
+            variant="outline"
+            className="w-full md:w-auto dark:text-white"
+          >
             Contact Us
           </Button>
         </div>

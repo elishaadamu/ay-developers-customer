@@ -35,12 +35,14 @@ export const Footer = () => {
         </div>
 
         <div className="flex flex-col gap-2">
-          <h3 className="font-bold text-lg">Quick Links</h3>
+          <h3 className="font-bold text-lg text-slate-900 dark:text-white">
+            Quick Links
+          </h3>
           <div>
             <a
               rel="noreferrer noopener"
               href="/"
-              className="opacity-60 hover:opacity-100"
+              className="text-slate-700 dark:text-slate-300 opacity-60 hover:opacity-100 hover:text-primary dark:hover:text-primary"
             >
               Home
             </a>
@@ -50,7 +52,7 @@ export const Footer = () => {
             <a
               rel="noreferrer noopener"
               href="/signin"
-              className="opacity-60 hover:opacity-100"
+              className="text-slate-700 dark:text-slate-300 opacity-60 hover:opacity-100 hover:text-primary dark:hover:text-primary"
             >
               Sign In
             </a>
@@ -60,7 +62,7 @@ export const Footer = () => {
             <a
               rel="noreferrer noopener"
               href="/signup"
-              className="opacity-60 hover:opacity-100"
+              className="text-slate-700 dark:text-slate-300 opacity-60 hover:opacity-100 hover:text-primary dark:hover:text-primary"
             >
               Sign Up
             </a>
@@ -69,7 +71,7 @@ export const Footer = () => {
       </section>
 
       <section className="container pb-14 text-center">
-        <h3>
+        <h3 className="text-slate-900 dark:text-white">
           &copy; {new Date().getFullYear()} AY CREATIVE TECHNOLOGY. All rights
           reserved.{" "}
           <a

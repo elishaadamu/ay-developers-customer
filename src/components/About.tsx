@@ -21,7 +21,7 @@ export const About = () => {
                 <span className="bg-gradient-to-b from-primary/60 to-primary text-transparent bg-clip-text">
                   About{" "}
                 </span>
-                AY CREATIVE TECHNOLOGY
+                <span className="dark:text-white">AY CREATIVE TECHNOLOGY</span>
               </h2>
               <p className="text-xl text-muted-foreground mt-4">
                 Born from bold ideas and built by visionaries, our company was

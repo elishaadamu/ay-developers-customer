@@ -69,7 +69,7 @@ export const Navbar = () => {
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger className="px-2">
                 <Menu
-                  className="flex md:hidden h-5 w-5"
+                  className="flex md:hidden h-5 w-5 text-slate-900 dark:text-white"
                   onClick={() => setIsOpen(true)}
                 >
                   <span className="sr-only">Menu Icon</span>
@@ -78,27 +78,31 @@ export const Navbar = () => {
 
               <SheetContent side={"left"}>
                 <SheetHeader>
-                  <SheetTitle className="font-bold text-xl">
-                    AY CREATIVE TECHNOLOGY
+                  <SheetTitle className="font-bold text-xl text-slate-900 dark:text-white">
+                    AY Developers
                   </SheetTitle>
                 </SheetHeader>
-                <nav className="flex flex-col justify-center items-center gap-2 mt-4">
+                <nav className="flex flex-col justify-center items-center gap-2 mt-4 ">
                   {routeList.map(({ href, label }: RouteProps) => (
                     <a
                       rel="noreferrer noopener"
                       key={label}
                       href={href}
                       onClick={() => setIsOpen(false)}
-                      className={buttonVariants({ variant: "ghost" })}
+                      className={`${buttonVariants({
+                        variant: "outline",
+                      })} text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800`}
                     >
                       {label}
                     </a>
                   ))}
-                  <div className="flex flex-col gap-2 mt-4">
+                  <div className="flex flex-col gap-2 mt-4 ">
                     <Link
                       to="/signin"
                       onClick={() => setIsOpen(false)}
-                      className={buttonVariants({ variant: "outline" })}
+                      className={`${buttonVariants({
+                        variant: "outline",
+                      })} text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800`}
                     >
                       Sign In
                     </Link>
@@ -122,9 +126,11 @@ export const Navbar = () => {
                 rel="noreferrer noopener"
                 href={route.href}
                 key={i}
-                className={`text-[17px] ${buttonVariants({
-                  variant: "ghost",
-                })}`}
+                className={`text-[17px] text-slate-900 dark:text-white hover:text-primary dark:hover:text-primary ${buttonVariants(
+                  {
+                    variant: "ghost",
+                  }
+                )}`}
               >
                 {route.label}
               </a>
@@ -134,7 +140,9 @@ export const Navbar = () => {
           <div className="hidden md:flex gap-2">
             <Link
               to="/signin"
-              className={buttonVariants({ variant: "outline" })}
+              className={`${buttonVariants({
+                variant: "outline",
+              })} text-slate-900 dark:text-white border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800`}
             >
               Sign In
             </Link>
