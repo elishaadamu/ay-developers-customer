@@ -252,14 +252,7 @@ export function Dashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-3 bg-primary/5 rounded-lg">
-                <ShoppingCart className="h-6 w-6 mx-auto mb-1 text-primary" />
-                <p className="text-sm font-medium">Orders Completed</p>
-                <p className="text-lg font-bold">
-                  {dashboardStats.completedOrders}
-                </p>
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="text-center p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
                 <Activity className="h-6 w-6 mx-auto mb-1 text-green-600" />
                 <p className="text-sm font-medium">Tickets Opened</p>
