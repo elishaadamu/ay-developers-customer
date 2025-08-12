@@ -44,18 +44,22 @@ import {
 import { useCart } from "@/contexts/CartContext";
 
 interface Product {
-  id: string;
+  _id: string;
   name: string;
   description: string;
-  category: string;
   price: number;
-  status: "Active" | "Coming Soon" | "Maintenance";
-  rating: number;
-  reviews: number;
-  features: string[];
-  icon: React.ComponentType<any>;
-  images?: string;
-  createdDate?: string;
+  images: string;
+  userId: string;
+  createdDate: string;
+  salesCount: number;
+  __v: number;
+  // Frontend-specific properties
+  category?: string;
+  status?: "Active" | "Coming Soon" | "Maintenance";
+  rating?: number;
+  reviews?: number;
+  features?: string[];
+  icon?: React.ComponentType<any>;
 }
 
 // Default fallback data for products with predefined features and icons
@@ -138,7 +142,7 @@ export function Products() {
         }
 
         const apiProducts = await response.json();
-
+        console.log("Fetched products:", apiProducts);
         // Transform API response to match our Product interface
         const transformedProducts: Product[] = apiProducts.map(
           (product: any, index: number) => {
@@ -154,12 +158,15 @@ export function Products() {
             };
 
             return {
-              id: `PROD-${String(index + 1).padStart(3, "0")}`,
+              _id: product._id,
               name: product.name,
               description: product.description,
               price: product.price,
               images: product.images,
               createdDate: product.createdDate,
+              userId: product.userId,
+              salesCount: product.salesCount,
+              __v: product.__v,
               ...defaults, // Spread the defaults (category, status, rating, reviews, features, icon)
             };
           }
@@ -267,25 +274,39 @@ export function Products() {
                   ) : (
                     <div className="space-y-4">
                       {cart.map((item) => {
-                        const IconComponent = item.icon;
+                        const IconComponent = item.icon || ShoppingCart;
                         return (
                           <div
-                            key={item.id}
+                            key={item._id}
                             className="flex items-center gap-4 p-4 border rounded-lg"
                           >
-                            {item.images ? (
-                              <div className="flex h-12 w-12 items-center justify-center rounded-lg overflow-hidden bg-slate-100">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-lg overflow-hidden bg-slate-100">
+                              {item.images ? (
                                 <img
                                   src={item.images}
                                   alt={item.name}
                                   className="h-full w-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.src = "";
+                                    e.currentTarget.onerror = null;
+                                    e.currentTarget.parentElement?.appendChild(
+                                      (() => {
+                                        const icon =
+                                          document.createElement("div");
+                                        icon.className = "h-5 w-5";
+                                        icon.innerHTML =
+                                          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="h-5 w-5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
+                                        return icon;
+                                      })()
+                                    );
+                                  }}
                                 />
-                              </div>
-                            ) : (
-                              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+                              ) : item.icon ? (
                                 <IconComponent className="h-5 w-5" />
-                              </div>
-                            )}
+                              ) : (
+                                <ShoppingCart className="h-5 w-5" />
+                              )}
+                            </div>
                             <div className="flex-1">
                               <h4 className="font-medium">{item.name}</h4>
                               <p className="text-sm text-muted-foreground">
@@ -297,7 +318,7 @@ export function Products() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() =>
-                                  updateQuantity(item.id, item.quantity - 1)
+                                  updateQuantity(item._id, item.quantity - 1)
                                 }
                               >
                                 <Minus className="h-3 w-3" />
@@ -309,7 +330,7 @@ export function Products() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() =>
-                                  updateQuantity(item.id, item.quantity + 1)
+                                  updateQuantity(item._id, item.quantity + 1)
                                 }
                               >
                                 <Plus className="h-3 w-3" />
@@ -322,7 +343,7 @@ export function Products() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => removeFromCart(item.id)}
+                                onClick={() => removeFromCart(item._id)}
                                 className="text-red-500 hover:text-red-700"
                               >
                                 <X className="h-4 w-4" />
@@ -418,9 +439,12 @@ export function Products() {
           {/* Products Grid */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredProducts.map((product) => {
-              const IconComponent = product.icon;
+              const IconComponent = product.icon || ShoppingCart;
               return (
-                <Card key={product.id} className="flex flex-col overflow-hidden hover:shadow-lg transition-shadow">
+                <Card
+                  key={product._id}
+                  className="flex flex-col overflow-hidden hover:shadow-lg transition-shadow"
+                >
                   {/* Product Image */}
                   <div className="relative h-48 w-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
                     {product.images ? (
@@ -428,10 +452,29 @@ export function Products() {
                         src={product.images}
                         alt={product.name}
                         className="h-full w-full object-cover object-center"
+                        onError={(e) => {
+                          e.currentTarget.src = "";
+                          e.currentTarget.onerror = null;
+                          const IconFallback = product.icon || ShoppingCart;
+                          e.currentTarget.parentElement?.appendChild(
+                            (() => {
+                              const icon = document.createElement("div");
+                              icon.className = "h-16 w-16 text-slate-400";
+                              icon.innerHTML = product.icon
+                                ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="h-16 w-16"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`
+                                : '<div class="flex h-full w-full items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="h-16 w-16"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>';
+                              return icon;
+                            })()
+                          );
+                        }}
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">
-                        <IconComponent className="h-16 w-16 text-slate-400" />
+                        {product.icon ? (
+                          <IconComponent className="h-16 w-16 text-slate-400" />
+                        ) : (
+                          <ShoppingCart className="h-16 w-16 text-slate-400" />
+                        )}
                       </div>
                     )}
                     {product.status === "Active" && (
@@ -443,7 +486,7 @@ export function Products() {
                       </Badge>
                     )}
                   </div>
-                  
+
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">

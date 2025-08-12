@@ -8,24 +8,25 @@ notification.config({
 });
 
 interface Product {
-  id: string;
+  _id: string;
   name: string;
   description: string;
-  category: string;
   price: number;
-  status: "Active" | "Coming Soon" | "Maintenance";
-  rating: number;
-  reviews: number;
-  features: string[];
-  icon: React.ComponentType<any>;
+  images: string;
+  userId: string;
+  createdDate: string;
+  salesCount: number;
+  __v: number;
+  icon?: React.ComponentType<any>;
 }
 
 interface CartItem {
-  id: string;
+  _id: string;
   name: string;
   price: number;
   quantity: number;
-  icon: React.ComponentType<any>;
+  images: string;
+  icon?: React.ComponentType<any>;
 }
 
 interface CartContextType {
@@ -80,22 +81,23 @@ export function CartProvider({ children }: CartProviderProps) {
   };
 
   const addToCart = (product: Product, quantity: number = 1) => {
-    const existingItem = cart.find((item) => item.id === product.id);
+    const existingItem = cart.find((item) => item._id === product._id);
 
     if (existingItem) {
       setCart(
         cart.map((item) =>
-          item.id === product.id
+          item._id === product._id
             ? { ...item, quantity: item.quantity + quantity }
             : item
         )
       );
     } else {
       const newItem: CartItem = {
-        id: product.id,
+        _id: product._id,
         name: product.name,
         price: product.price,
         quantity: quantity,
+        images: product.images,
         icon: product.icon,
       };
       setCart([...cart, newItem]);
@@ -105,7 +107,7 @@ export function CartProvider({ children }: CartProviderProps) {
   };
 
   const removeFromCart = (productId: string) => {
-    setCart(cart.filter((item) => item.id !== productId));
+    setCart(cart.filter((item) => item._id !== productId));
   };
 
   const updateQuantity = (productId: string, newQuantity: number) => {
@@ -116,7 +118,7 @@ export function CartProvider({ children }: CartProviderProps) {
 
     setCart(
       cart.map((item) =>
-        item.id === productId ? { ...item, quantity: newQuantity } : item
+        item._id === productId ? { ...item, quantity: newQuantity } : item
       )
     );
   };

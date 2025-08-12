@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Modal } from "antd";
+import { toast } from "sonner";
+import { getEncryptedStorage } from "@/utils/encryption";
 import {
   Card,
   CardContent,
@@ -63,15 +65,16 @@ import { useCart } from "@/contexts/CartContext";
 import { setOrdersData } from "@/utils/dashboardData";
 
 interface CartItem {
-  id: string;
+  _id: string;
   name: string;
   price: number;
   quantity: number;
-  icon: React.ComponentType<any>;
+  images: string;
+  icon?: React.ComponentType<any>;
 }
 
 interface OrderItem {
-  id: string;
+  _id: string;
   orderId: string;
   customerName: string;
   customerEmail: string;
@@ -80,79 +83,22 @@ interface OrderItem {
   status: "Pending" | "Processing" | "Completed" | "Cancelled";
   paymentMethod: string;
   orderDate: string;
+  paymentReference?: string;
 }
-
-const recentOrders: OrderItem[] = [
-  {
-    id: "1",
-    orderId: "ORD-001",
-    customerName: "John Doe",
-    customerEmail: "john.doe@example.com",
-    products: [
-      {
-        id: "PROD-002",
-        name: "Website Development",
-        price: 250000,
-        quantity: 1,
-        icon: Globe,
-      },
-    ],
-    totalAmount: 250000,
-    status: "Processing",
-    paymentMethod: "Card",
-    orderDate: "2025-01-16",
-  },
-  {
-    id: "2",
-    orderId: "ORD-002",
-    customerName: "Jane Smith",
-    customerEmail: "jane.smith@example.com",
-    products: [
-      {
-        id: "PROD-001",
-        name: "Reseller Hosting",
-        price: 15000,
-        quantity: 2,
-        icon: CloudDrizzle,
-      },
-    ],
-    totalAmount: 30000,
-    status: "Completed",
-    paymentMethod: "Bank Transfer",
-    orderDate: "2025-01-15",
-  },
-  {
-    id: "3",
-    orderId: "ORD-003",
-    customerName: "Mike Johnson",
-    customerEmail: "mike.johnson@example.com",
-    products: [
-      {
-        id: "PROD-003",
-        name: "Console Management",
-        price: 50000,
-        quantity: 1,
-        icon: Settings,
-      },
-    ],
-    totalAmount: 50000,
-    status: "Pending",
-    paymentMethod: "Card",
-    orderDate: "2025-01-14",
-  },
-];
 
 export function Orders() {
   const navigate = useNavigate();
   const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
-  const [orders, setOrders] = useState<OrderItem[]>(recentOrders);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [orders, setOrders] = useState<OrderItem[]>([]);
+  const userData = getEncryptedStorage("userData");
   const [customerInfo, setCustomerInfo] = useState({
     name: "",
     email: "",
     phone: "",
     address: "",
   });
-  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("card");
 
   // Use cart context - this will show products added from Products page
   const {
@@ -172,6 +118,128 @@ export function Orders() {
     }).format(price);
   };
 
+  const handlePaystackPayment = (amount: number, customerEmail: string) => {
+    // Check if Paystack is loaded and properly typed
+    const PaystackPop = (window as any).PaystackPop;
+    if (!PaystackPop) {
+      toast.error("Paystack is not loaded. Please refresh the page.");
+      return;
+    }
+
+    // Log payment details before initialization
+    console.log("Initializing Paystack Payment:", {
+      publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_URL,
+      amount: {
+        original: amount,
+        inKobo: Number(amount) * 100,
+        formatted: formatPrice(amount),
+      },
+      customer: {
+        email: customerInfo.email,
+        name: customerInfo.name,
+        phone: customerInfo.phone,
+        address: customerInfo.address,
+      },
+      user: {
+        id: userData?._id || userData?.id,
+        fullName: `${userData?.firstName} ${userData?.lastName}`,
+      },
+      cart: {
+        items: cart.map((item) => ({
+          _id: item._id,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          total: item.price * item.quantity,
+        })),
+        totalItems: getTotalItems(),
+        totalAmount: getTotalPrice(),
+      },
+      reference: `AY-${Date.now()}`,
+    });
+
+    const handler = PaystackPop.setup({
+      key: import.meta.env.VITE_PAYSTACK_PUBLIC_URL,
+      email: customerInfo.email,
+      amount: Number(amount) * 100, // Convert to kobo
+      currency: "NGN",
+      ref: `AY-${Date.now()}`,
+      metadata: {
+        userId: userData?._id || userData?.id,
+        name: `${userData?.firstName} ${userData?.lastName}`,
+        customer_name: customerInfo.name,
+        customer_email: customerInfo.email,
+        customer_phone: customerInfo.phone,
+        customer_address: customerInfo.address,
+        cart_items: JSON.stringify(
+          cart.map((item) => ({
+            _id: item._id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+          }))
+        ),
+        total_amount: amount,
+        items_count: getTotalItems(),
+      },
+      callback: function (response: { reference: string }) {
+        // Log the successful payment response
+        console.log("Paystack Payment Successful:", {
+          reference: response.reference,
+          orderDetails: {
+            customer: customerInfo,
+            amount: getTotalPrice(),
+            itemCount: getTotalItems(),
+            cart: cart.map((item) => ({
+              _id: item._id,
+              name: item.name,
+              quantity: item.quantity,
+              price: item.price,
+              total: item.price * item.quantity,
+            })),
+          },
+          timestamp: new Date().toISOString(),
+        });
+
+        toast.success("Payment successful. Processing...");
+        // Create and save the order after successful payment
+        const newOrder: OrderItem = {
+          _id: `${Date.now()}`,
+          orderId: `ORD-${String(orders.length + 1).padStart(3, "0")}`,
+          customerName: customerInfo.name,
+          customerEmail: customerInfo.email,
+          products: [...cart],
+          totalAmount: getTotalPrice(),
+          status: "Completed", // Mark as completed since payment is successful
+          paymentMethod: "card",
+          orderDate: new Date().toISOString().split("T")[0],
+          paymentReference: response.reference,
+        };
+        const updatedOrders = [newOrder, ...orders];
+        setOrders(updatedOrders);
+        setOrdersData(updatedOrders);
+        clearCart();
+        setCustomerInfo({ name: "", email: "", phone: "", address: "" });
+        setPaymentMethod("");
+        setIsNewOrderOpen(false);
+        toast.success("Order placed and payment completed successfully!");
+      },
+      onClose: function () {
+        console.log("Paystack Payment Closed:", {
+          timestamp: new Date().toISOString(),
+          cart: {
+            totalAmount: getTotalPrice(),
+            itemCount: getTotalItems(),
+          },
+          customer: customerInfo,
+        });
+        toast.error("Payment closed by user.");
+      },
+    });
+
+    handler.openIframe();
+  };
+
   const handlePlaceOrder = () => {
     if (cart.length === 0) {
       showAlert("Please add products to cart", "error");
@@ -183,7 +251,32 @@ export function Orders() {
       return;
     }
 
-    // Show confirmation modal
+    if (paymentMethod === "card") {
+      // Close the cart modal first
+      setIsNewOrderOpen(false);
+      // Add a small delay before opening Paystack popup
+      setTimeout(() => {
+        handlePaystackPayment(getTotalPrice(), customerInfo.email);
+      }, 300);
+      return;
+    }
+
+    // Log the order data for other payment methods
+    console.log("Order Data:", {
+      customerInfo,
+      cart: cart.map((item) => ({
+        _id: item._id,
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      totalAmount: getTotalPrice(),
+      paymentMethod,
+      userId: userData?._id || userData?.id,
+      userName: `${userData?.firstName} ${userData?.lastName}`,
+    });
+
+    // Show confirmation modal for other payment methods
     Modal.confirm({
       title: "Confirm Order",
       content: (
@@ -209,8 +302,25 @@ export function Orders() {
         // Simulate payment processing
         const paymentSuccessful = Math.random() > 0.3; // 70% success rate for demo
 
+        // Log the order data before creation
+        console.log("Creating Order:", {
+          customerInfo,
+          products: cart.map((item) => ({
+            _id: item._id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+          totalAmount: getTotalPrice(),
+          paymentMethod,
+          userData: {
+            userId: userData?._id || userData?.id,
+            userName: `${userData?.firstName} ${userData?.lastName}`,
+          },
+        });
+
         const newOrder: OrderItem = {
-          id: `${Date.now()}`,
+          _id: `${Date.now()}`,
           orderId: `ORD-${String(orders.length + 1).padStart(3, "0")}`,
           customerName: customerInfo.name,
           customerEmail: customerInfo.email,
@@ -220,6 +330,13 @@ export function Orders() {
           paymentMethod: paymentMethod,
           orderDate: new Date().toISOString().split("T")[0],
         };
+
+        // Log the complete order before saving
+        console.log("Saving Order:", {
+          order: newOrder,
+          currentOrdersCount: orders.length,
+          timestamp: new Date().toISOString(),
+        });
 
         const updatedOrders = [newOrder, ...orders];
         setOrders(updatedOrders);
@@ -254,7 +371,7 @@ export function Orders() {
       onOk: () => {
         setOrders(
           orders.map((order) =>
-            order.id === orderId
+            order._id === orderId
               ? { ...order, status: "Completed" as const }
               : order
           )
@@ -276,7 +393,7 @@ export function Orders() {
       onOk: () => {
         setOrders(
           orders.map((order) =>
-            order.id === orderId
+            order._id === orderId
               ? { ...order, status: "Cancelled" as const }
               : order
           )
@@ -296,7 +413,7 @@ export function Orders() {
       onOk: () => {
         setOrders(
           orders.map((order) =>
-            order.id === orderId
+            order._id === orderId
               ? { ...order, status: "Completed" as const }
               : order
           )
@@ -401,14 +518,37 @@ export function Orders() {
                     <CardContent>
                       <div className="space-y-4">
                         {cart.map((item) => {
-                          const IconComponent = item.icon;
+                          const IconComponent = item.icon || ShoppingCart;
                           return (
                             <div
-                              key={item.id}
+                              key={item._id}
                               className="flex items-center gap-4 p-4 border rounded-lg"
                             >
                               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                                <IconComponent className="h-4 w-4" />
+                                {item.icon ? (
+                                  <IconComponent className="h-4 w-4" />
+                                ) : (
+                                  <img
+                                    src={item.images}
+                                    alt={item.name}
+                                    className="h-4 w-4 object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.src = "";
+                                      e.currentTarget.onerror = null;
+                                      const IconFallback = ShoppingCart;
+                                      e.currentTarget.parentElement?.appendChild(
+                                        (() => {
+                                          const icon =
+                                            document.createElement("div");
+                                          icon.className = "h-4 w-4";
+                                          icon.innerHTML =
+                                            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="h-4 w-4"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
+                                          return icon;
+                                        })()
+                                      );
+                                    }}
+                                  />
+                                )}
                               </div>
                               <div className="flex-1">
                                 <h4 className="font-medium">{item.name}</h4>
@@ -421,7 +561,7 @@ export function Orders() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() =>
-                                    updateQuantity(item.id, item.quantity - 1)
+                                    updateQuantity(item._id, item.quantity - 1)
                                   }
                                 >
                                   <Minus className="h-3 w-3" />
@@ -433,7 +573,7 @@ export function Orders() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() =>
-                                    updateQuantity(item.id, item.quantity + 1)
+                                    updateQuantity(item._id, item.quantity + 1)
                                   }
                                 >
                                   <Plus className="h-3 w-3" />
@@ -447,7 +587,7 @@ export function Orders() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => removeFromCart(item.id)}
+                                onClick={() => removeFromCart(item._id)}
                                 className="text-red-500 hover:text-red-700"
                               >
                                 <X className="h-4 w-4" />
@@ -555,27 +695,16 @@ export function Orders() {
                     <Select
                       value={paymentMethod}
                       onValueChange={setPaymentMethod}
+                      defaultValue="card"
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select payment method" />
+                        <SelectValue placeholder="Pay with Paystack" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="card">
                           <div className="flex items-center gap-2">
                             <CreditCard className="h-4 w-4" />
-                            <span>Credit/Debit Card</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="bank-transfer">
-                          <div className="flex items-center gap-2">
-                            <DollarSign className="h-4 w-4" />
-                            <span>Bank Transfer</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="cash">
-                          <div className="flex items-center gap-2">
-                            <DollarSign className="h-4 w-4" />
-                            <span>Cash Payment</span>
+                            <span>Pay with Paystack</span>
                           </div>
                         </SelectItem>
                       </SelectContent>
@@ -584,10 +713,7 @@ export function Orders() {
                       <div className="mt-4 p-4 bg-muted rounded-lg">
                         <div className="flex items-center gap-2 text-sm">
                           <Check className="h-4 w-4 text-green-500" />
-                          <span>
-                            Payment method selected:{" "}
-                            {paymentMethod.replace("-", " ").toUpperCase()}
-                          </span>
+                          <span>Ready to pay with Paystack</span>
                         </div>
                       </div>
                     )}
@@ -747,7 +873,7 @@ export function Orders() {
             </TableHeader>
             <TableBody>
               {orders.map((order) => (
-                <TableRow key={order.id}>
+                <TableRow key={order._id}>
                   <TableCell className="font-medium">{order.orderId}</TableCell>
                   <TableCell>
                     <div>
@@ -792,14 +918,14 @@ export function Orders() {
                         {order.status === "Pending" && (
                           <>
                             <DropdownMenuItem
-                              onClick={() => handleCompletePayment(order.id)}
+                              onClick={() => handleCompletePayment(order._id)}
                               className="text-green-600"
                             >
                               <CheckCircle className="mr-2 h-4 w-4" />
                               Complete Payment
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => handleCancelOrder(order.id)}
+                              onClick={() => handleCancelOrder(order._id)}
                               className="text-red-600"
                             >
                               <XCircle className="mr-2 h-4 w-4" />
@@ -810,14 +936,14 @@ export function Orders() {
                         {order.status === "Processing" && (
                           <>
                             <DropdownMenuItem
-                              onClick={() => handleCompleteOrder(order.id)}
+                              onClick={() => handleCompleteOrder(order._id)}
                               className="text-green-600"
                             >
                               <CheckCircle className="mr-2 h-4 w-4" />
                               Mark as Completed
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => handleCancelOrder(order.id)}
+                              onClick={() => handleCancelOrder(order._id)}
                               className="text-red-600"
                             >
                               <XCircle className="mr-2 h-4 w-4" />

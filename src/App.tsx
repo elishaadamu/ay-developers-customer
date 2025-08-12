@@ -5,6 +5,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { App as AntApp } from "antd";
+import { Toaster } from "sonner";
 import { Home } from "./pages/Home";
 import { SignIn } from "./pages/SignIn";
 import { SignUp } from "./pages/SignUp";
@@ -21,6 +22,7 @@ import { Support } from "./pages/user/Support";
 
 import { CartProvider } from "./contexts/CartContext";
 import { ThemeProvider } from "./components/theme-provider";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 // Component that wraps the routes and provides activity tracking
 function AppRoutes() {
@@ -29,12 +31,13 @@ function AppRoutes() {
 
   return (
     <Routes>
+      {/* Public Routes */}
       <Route path="/" element={<Home />} />
       <Route path="/signin" element={<SignIn />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="*" element={<Notfound />} />
 
-      {/* User Dashboard Routes */}
+      {/* Protected User Dashboard Routes */}
       <Route
         path="/user/home"
         element={<Navigate to="/user/dashboard" replace />}
@@ -42,57 +45,71 @@ function AppRoutes() {
       <Route
         path="/user/dashboard"
         element={
-          <UserLayout>
-            <Dashboard />
-          </UserLayout>
+          <ProtectedRoute>
+            <UserLayout>
+              <Dashboard />
+            </UserLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/user/profile"
         element={
-          <UserLayout>
-            <Profile />
-          </UserLayout>
+          <ProtectedRoute>
+            <UserLayout>
+              <Profile />
+            </UserLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/user/products"
         element={
-          <UserLayout>
-            <Products />
-          </UserLayout>
+          <ProtectedRoute>
+            <UserLayout>
+              <Products />
+            </UserLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/user/orders"
         element={
-          <UserLayout>
-            <Orders />
-          </UserLayout>
+          <ProtectedRoute>
+            <UserLayout>
+              <Orders />
+            </UserLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/user/tickets"
         element={
-          <UserLayout>
-            <Tickets />
-          </UserLayout>
+          <ProtectedRoute>
+            <UserLayout>
+              <Tickets />
+            </UserLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/user/support"
         element={
-          <UserLayout>
-            <Support />
-          </UserLayout>
+          <ProtectedRoute>
+            <UserLayout>
+              <Support />
+            </UserLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/user/settings"
         element={
-          <UserLayout>
-            <Tickets />
-          </UserLayout>
+          <ProtectedRoute>
+            <UserLayout>
+              <Tickets />
+            </UserLayout>
+          </ProtectedRoute>
         }
       />
     </Routes>
@@ -109,6 +126,7 @@ function App() {
           </Router>
         </CartProvider>
       </AntApp>
+      <Toaster position="top-center" richColors closeButton />
     </ThemeProvider>
   );
 }

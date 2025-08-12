@@ -43,6 +43,18 @@ export function SignIn() {
     }
   }, [email, password]);
 
+  // Handle successful login and redirect
+  const handleSuccessfulLogin = () => {
+    // Check if there's a stored redirect URL
+    const redirectUrl = sessionStorage.getItem("redirectUrl");
+    if (redirectUrl) {
+      sessionStorage.removeItem("redirectUrl"); // Clear the stored URL
+      navigate(redirectUrl);
+    } else {
+      navigate("/user/dashboard"); // Default redirect
+    }
+  };
+
   // useEffect to handle API call when shouldLogin is true
   useEffect(() => {
     const loginUser = async () => {
@@ -78,7 +90,7 @@ export function SignIn() {
 
           // Small delay before redirect to show the success message
           setTimeout(() => {
-            navigate("/user/home");
+            handleSuccessfulLogin();
           }, 1500);
         } else {
           message.error(response.data.message || "Login failed");

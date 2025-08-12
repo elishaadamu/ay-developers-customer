@@ -1,19 +1,22 @@
 // Shared data utilities for dashboard
 export interface OrderItem {
-  id: string;
+  _id: string;
   orderId: string;
   customerName: string;
   customerEmail: string;
   products: {
-    id: string;
+    _id: string;
     name: string;
     price: number;
     quantity: number;
+    images: string;
+    icon?: React.ComponentType<any>;
   }[];
   totalAmount: number;
   status: "Pending" | "Processing" | "Completed" | "Cancelled";
   paymentMethod: string;
   orderDate: string;
+  paymentReference?: string;
 }
 
 export interface TicketItem {
@@ -46,13 +49,14 @@ export const getOrdersData = (): OrderItem[] => {
   // Return mock data if no stored data
   return [
     {
-      id: "1",
+      _id: "1",
       orderId: "ORD-001",
       customerName: "John Doe",
       customerEmail: "john.doe@example.com",
       products: [
         {
-          id: "PROD-002",
+          _id: "PROD-002",
+          images: "",
           name: "Website Development",
           price: 250000,
           quantity: 1,
@@ -64,13 +68,14 @@ export const getOrdersData = (): OrderItem[] => {
       orderDate: "2025-01-16",
     },
     {
-      id: "2",
+      _id: "2",
       orderId: "ORD-002",
       customerName: "Jane Smith",
       customerEmail: "jane.smith@example.com",
       products: [
         {
-          id: "PROD-001",
+          _id: "PROD-001",
+          images: "",
           name: "Reseller Hosting",
           price: 15000,
           quantity: 2,
@@ -82,13 +87,14 @@ export const getOrdersData = (): OrderItem[] => {
       orderDate: "2025-01-15",
     },
     {
-      id: "3",
+      _id: "3",
       orderId: "ORD-003",
       customerName: "Mike Johnson",
       customerEmail: "mike.johnson@example.com",
       products: [
         {
-          id: "PROD-003",
+          _id: "PROD-003",
+          images: "",
           name: "Console Management",
           price: 50000,
           quantity: 1,
@@ -100,13 +106,14 @@ export const getOrdersData = (): OrderItem[] => {
       orderDate: "2025-01-14",
     },
     {
-      id: "4",
+      _id: "4",
       orderId: "ORD-004",
       customerName: "Sarah Wilson",
       customerEmail: "sarah.wilson@example.com",
       products: [
         {
-          id: "PROD-004",
+          _id: "PROD-004",
+          images: "",
           name: "Premium Hosting Services",
           price: 25000,
           quantity: 1,
