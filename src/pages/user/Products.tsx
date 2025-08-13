@@ -122,18 +122,6 @@ export function Products() {
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
 
-  // Type guard for product properties
-  const hasRating = (
-    product: Product
-  ): product is Product & { rating: number } => {
-    return typeof product.rating === "number";
-  };
-
-  const hasFeatures = (
-    product: Product
-  ): product is Product & { features: string[] } => {
-    return Array.isArray(product.features);
-  };
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -158,7 +146,7 @@ export function Products() {
         console.log("Fetched products:", apiProducts);
         // Transform API response to match our Product interface
         const transformedProducts: Product[] = apiProducts.map(
-          (product: any, index: number) => {
+          (product: any) => {
             const defaults = productDefaults[
               product.name as keyof typeof productDefaults
             ] || {

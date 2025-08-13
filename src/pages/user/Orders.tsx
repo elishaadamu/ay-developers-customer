@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Modal } from "antd";
 import { useEffect } from "react";
 import { toast } from "sonner";
-import { getEncryptedStorage } from "@/utils/encryption";
 import axios from "axios";
 import {
   Card,
@@ -51,14 +50,11 @@ import {
   ShoppingCart,
   DollarSign,
   Activity,
-  CloudDrizzle,
-  Settings,
   Plus,
   Minus,
   X,
   CreditCard,
   Check,
-  Globe,
   MoreHorizontal,
   CheckCircle,
   XCircle,
@@ -92,7 +88,6 @@ interface OrderItem {
 export function Orders() {
   const navigate = useNavigate();
   const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [userData, setUserData] = useState<any>(null);
@@ -122,7 +117,7 @@ export function Orders() {
     }).format(price);
   };
 
-  const handlePaystackPayment = (amount: number, customerEmail: string) => {
+  const handlePaystackPayment = (amount: number) => {
     // Check if Paystack is loaded and properly typed
     const PaystackPop = (window as any).PaystackPop;
     if (!PaystackPop) {
@@ -257,7 +252,7 @@ export function Orders() {
 
     if (paymentMethod === "card") {
       // Handle Paystack payment
-      handlePaystackPayment(getTotalPrice(), customerInfo.email);
+      handlePaystackPayment(getTotalPrice());
       return;
     }
 
@@ -594,7 +589,7 @@ export function Orders() {
                                     onError={(e) => {
                                       e.currentTarget.src = "";
                                       e.currentTarget.onerror = null;
-                                      const IconFallback = ShoppingCart;
+
                                       e.currentTarget.parentElement?.appendChild(
                                         (() => {
                                           const icon =
