@@ -14,11 +14,11 @@ export function enrichProductWithDefaults(
 
   return {
     ...product,
-    category: product.category || defaults.category,
-    status: product.status || defaults.status,
-    rating: product.rating || defaults.rating,
-    reviews: product.reviews || defaults.reviews,
-    features: product.features || defaults.features,
-    icon: product.icon || defaults.icon,
+    category: product.category ?? defaults.category,
+    status: product.status ?? defaults.status,
+    rating: product.rating ?? defaults.rating,
+    reviews: product.reviews ?? defaults.reviews,
+    features: product.features ?? defaults.features,
+    icon: product.icon ?? defaults.icon,
   };
 }

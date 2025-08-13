@@ -121,6 +121,19 @@ const productDefaults = {
 export function Products() {
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
+
+  // Type guard for product properties
+  const hasRating = (
+    product: Product
+  ): product is Product & { rating: number } => {
+    return typeof product.rating === "number";
+  };
+
+  const hasFeatures = (
+    product: Product
+  ): product is Product & { features: string[] } => {
+    return Array.isArray(product.features);
+  };
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");

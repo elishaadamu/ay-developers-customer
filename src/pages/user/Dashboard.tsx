@@ -34,7 +34,6 @@ import axios from "axios";
 import { getEncryptedStorage } from "@/utils/encryption";
 import config from "@/utils/api";
 import {
-  getOrdersData,
   getDashboardStats,
   formatPrice,
   type OrderItem,
