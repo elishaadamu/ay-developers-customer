@@ -30,6 +30,7 @@ import {
   Globe,
   Calendar,
 } from "lucide-react";
+import axios from "axios";
 import { getEncryptedStorage } from "@/utils/encryption";
 import config from "@/utils/api";
 import {
@@ -54,19 +55,89 @@ export function Dashboard() {
     totalAvailableTickets: 0,
   });
 
+  // Fetch orders from API
+  const fetchOrders = async (loadedUserData: any) => {
+    try {
+      // Add delay to prevent rate limiting
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const userId = loadedUserData?._id || loadedUserData?.id;
+      if (!userId) {
+        console.error("❌ No user ID found in loaded user data");
+        return [];
+      }
+
+      console.log("Fetching orders for user ID:", userId);
+      if (!userId) {
+        console.error("❌ No user ID found in user data");
+        return [];
+      }
+
+      const response = await axios.get(
+        `${config.apiBaseUrl}${config.endpoints.getPayments}${userId}`
+      );
+
+      console.log("✅ Payments fetched successfully:", response.data);
+
+      // Map the payment data to our OrderItem format
+      const ordersData = (response.data.data || response.data || []).map(
+        (payment: any) => ({
+          _id: payment._id || String(Date.now()),
+          orderId: payment.transactionRef || `ORD-${Date.now()}`,
+          customerEmail: userData?.email || "",
+          products: [
+            {
+              _id: payment.productId._id,
+              name: payment.productId.name,
+              price: payment.productId.price,
+              quantity: 1,
+              images: "",
+            },
+          ],
+          totalAmount: payment.amount,
+          status:
+            payment.status === "success"
+              ? "Completed"
+              : payment.status === "pending"
+              ? "Pending"
+              : payment.status === "failed"
+              ? "Cancelled"
+              : "Processing",
+          paymentMethod: payment.paymentGateway,
+          orderDate: new Date(payment.createdAt).toISOString().split("T")[0],
+          paymentReference: payment.transactionRef,
+        })
+      );
+
+      console.log("📊 Mapped orders data:", ordersData);
+      setOrders(ordersData);
+      return ordersData;
+    } catch (error) {
+      console.error("❌ Error fetching payments:", error);
+      return [];
+    }
+  };
+
   // Load user data and dashboard data on component mount
   useEffect(() => {
+    let isMounted = true;
+
     const loadDashboardData = async () => {
-      setIsLoading(true);
+      if (!isLoading) return; // Prevent multiple loads
+
       try {
         // Load user data
         const loadedUserData = getEncryptedStorage("userData");
-        if (loadedUserData) {
-          setUserData(loadedUserData);
+        if (!loadedUserData) {
+          console.error("No user data found in storage");
+          return;
         }
 
-        // Load orders and tickets data from localStorage
-        const ordersData = getOrdersData();
+        if (!isMounted) return;
+        setUserData(loadedUserData);
+
+        // Pass the loaded user data directly to fetchOrders
+        const ordersData = await fetchOrders(loadedUserData);
         const stats = getDashboardStats();
 
         // Fetch products from API
@@ -111,7 +182,11 @@ export function Dashboard() {
     };
 
     loadDashboardData();
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Remove userData dependency
 
   // Dynamic stats based on actual data
   const stats = [
@@ -152,7 +227,6 @@ export function Dashboard() {
   // Get recent orders (last 4)
   const recentOrders = orders.slice(0, 4).map((order) => ({
     id: order.orderId,
-    customer: order.customerName,
     product: order.products.map((p) => p.name).join(", "),
     amount: formatPrice(order.totalAmount),
     status: order.status,
@@ -406,7 +480,6 @@ export function Dashboard() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Order ID</TableHead>
-                  <TableHead>Customer</TableHead>
                   <TableHead>Product</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Status</TableHead>
@@ -417,7 +490,6 @@ export function Dashboard() {
                 {recentOrders.map((order) => (
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">{order.id}</TableCell>
-                    <TableCell>{order.customer}</TableCell>
                     <TableCell className="max-w-[200px] truncate">
                       {order.product}
                     </TableCell>

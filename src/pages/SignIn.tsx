@@ -49,7 +49,7 @@ export function SignIn() {
     const redirectUrl = sessionStorage.getItem("redirectUrl");
     if (redirectUrl) {
       sessionStorage.removeItem("redirectUrl"); // Clear the stored URL
-      navigate(redirectUrl);
+      navigate("/user/dashboard");
     } else {
       navigate("/user/dashboard"); // Default redirect
     }

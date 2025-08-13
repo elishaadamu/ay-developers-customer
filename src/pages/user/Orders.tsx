@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Modal } from "antd";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { getEncryptedStorage } from "@/utils/encryption";
+import axios from "axios";
 import {
   Card,
   CardContent,
@@ -63,6 +65,7 @@ import {
 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { setOrdersData } from "@/utils/dashboardData";
+import { config } from "@/utils/api";
 
 interface CartItem {
   _id: string;
@@ -91,7 +94,8 @@ export function Orders() {
   const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [orders, setOrders] = useState<OrderItem[]>([]);
-  const userData = getEncryptedStorage("userData");
+  const [loading, setLoading] = useState(false);
+  const [userData, setUserData] = useState<any>(null);
   const [customerInfo, setCustomerInfo] = useState({
     name: "",
     email: "",
@@ -252,12 +256,8 @@ export function Orders() {
     }
 
     if (paymentMethod === "card") {
-      // Close the cart modal first
-      setIsNewOrderOpen(false);
-      // Add a small delay before opening Paystack popup
-      setTimeout(() => {
-        handlePaystackPayment(getTotalPrice(), customerInfo.email);
-      }, 300);
+      // Handle Paystack payment
+      handlePaystackPayment(getTotalPrice(), customerInfo.email);
       return;
     }
 
@@ -360,7 +360,66 @@ export function Orders() {
       },
     });
   };
+  // Fetch tickets from API
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const userId = userData?._id || userData?.id;
+      if (!userId) {
+        console.error("❌ No user ID found");
+        return;
+      }
 
+      const response = await axios.get(
+        `${config.apiBaseUrl}${config.endpoints.getPayments}${userId}`
+      );
+
+      console.log("✅ Payments fetched successfully:", response.data);
+
+      // Map the payment data to our OrderItem format
+      const ordersData = (response.data.data || response.data || []).map(
+        (payment: any) => ({
+          _id: payment._id || String(Date.now()),
+          orderId: payment.transactionRef || `ORD-${Date.now()}`,
+          customerEmail: userData?.email || "",
+          products: [
+            {
+              _id: payment.productId._id,
+              name: payment.productId.name,
+              price: payment.productId.price,
+              quantity: 1,
+              images: "", // Add default image path if available
+            },
+          ],
+          totalAmount: payment.amount,
+          status:
+            payment.status === "success"
+              ? "Completed"
+              : payment.status === "pending"
+              ? "Pending"
+              : payment.status === "failed"
+              ? "Cancelled"
+              : "Processing",
+          paymentMethod: payment.paymentGateway,
+          orderDate: new Date(payment.createdAt).toISOString().split("T")[0],
+          paymentReference: payment.transactionRef,
+        })
+      );
+
+      console.log("📊 Mapped orders data:", ordersData);
+      setOrders(ordersData);
+      setOrdersData(ordersData); // Store in localStorage for dashboard
+    } catch (error) {
+      console.error("❌ Error fetching payments:", error);
+      showAlert("Failed to fetch payment history", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
   // Handle order completion
   const handleCompleteOrder = (orderId: string) => {
     Modal.confirm({

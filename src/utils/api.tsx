@@ -7,6 +7,7 @@ export const config = {
     updateProfile: "/auth/updateProfile",
     ticket: "/tickets",
     GetProducts: "/products/",
+    getPayments: "/payment/user/",
   },
 };
 

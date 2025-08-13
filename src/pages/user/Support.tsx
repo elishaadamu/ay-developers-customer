@@ -452,7 +452,7 @@ export function Support() {
               <div>
                 <p className="font-medium">Knowledge Base</p>
                 <p className="text-sm text-muted-foreground">
-                  help.aydevelopers.ng
+                  support.aydevelopers.ng
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Self-service portal
