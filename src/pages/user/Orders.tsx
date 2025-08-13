@@ -89,8 +89,7 @@ export function Orders() {
   const navigate = useNavigate();
   const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
   const [orders, setOrders] = useState<OrderItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [userData, setUserData] = useState<any>(null);
+  const [userData] = useState<any>(null);
   const [customerInfo, setCustomerInfo] = useState({
     name: "",
     email: "",
@@ -357,7 +356,6 @@ export function Orders() {
   };
   // Fetch tickets from API
   const fetchOrders = async () => {
-    setLoading(true);
     try {
       const userId = userData?._id || userData?.id;
       if (!userId) {
@@ -407,8 +405,6 @@ export function Orders() {
     } catch (error) {
       console.error("❌ Error fetching payments:", error);
       showAlert("Failed to fetch payment history", "error");
-    } finally {
-      setLoading(false);
     }
   };
 

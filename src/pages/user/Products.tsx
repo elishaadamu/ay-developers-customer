@@ -459,7 +459,6 @@ export function Products() {
                         onError={(e) => {
                           e.currentTarget.src = "";
                           e.currentTarget.onerror = null;
-                          const IconFallback = product.icon || ShoppingCart;
                           e.currentTarget.parentElement?.appendChild(
                             (() => {
                               const icon = document.createElement("div");
