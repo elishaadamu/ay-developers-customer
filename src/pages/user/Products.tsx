@@ -415,8 +415,11 @@ export function Products() {
                     <SelectContent>
                       <SelectItem value="all">All Categories</SelectItem>
                       {categories.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
+                        <SelectItem
+                          key={category ?? "Other"}
+                          value={category ?? "Other"}
+                        >
+                          {category ?? "Other"}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -495,10 +498,14 @@ export function Products() {
                           {product.name}
                         </CardTitle>
                         <div className="flex items-center gap-2 mt-2">
-                          <Badge variant={getStatusVariant(product.status)}>
-                            {product.status}
+                          <Badge
+                            variant={getStatusVariant(
+                              product.status ?? "Active"
+                            )}
+                          >
+                            {product.status ?? "Active"}
                           </Badge>
-                          {product.rating > 0 && (
+                          {(product.rating ?? 0) > 0 && (
                             <div className="flex items-center gap-1 text-sm text-muted-foreground">
                               <Star className="h-3 w-3 fill-current text-yellow-500" />
                               <span>{product.rating}</span>
@@ -517,7 +524,7 @@ export function Products() {
                     <div className="mb-4">
                       <p className="text-sm font-medium mb-2">Key Features:</p>
                       <div className="flex flex-wrap gap-1">
-                        {product.features.map((feature, index) => (
+                        {(product.features ?? []).map((feature, index) => (
                           <Badge
                             key={index}
                             variant="outline"
@@ -585,15 +592,19 @@ export function Products() {
                                   Key Features:
                                 </h4>
                                 <div className="grid gap-2">
-                                  {product.features.map((feature, index) => (
-                                    <div
-                                      key={index}
-                                      className="flex items-center gap-2"
-                                    >
-                                      <Star className="h-4 w-4 text-primary" />
-                                      <span className="text-sm">{feature}</span>
-                                    </div>
-                                  ))}
+                                  {(product.features ?? []).map(
+                                    (feature, index) => (
+                                      <div
+                                        key={index}
+                                        className="flex items-center gap-2"
+                                      >
+                                        <Star className="h-4 w-4 text-primary" />
+                                        <span className="text-sm">
+                                          {feature}
+                                        </span>
+                                      </div>
+                                    )
+                                  )}
                                 </div>
                               </div>
                               <div className="flex items-center gap-4">
