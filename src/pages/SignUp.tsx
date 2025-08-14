@@ -13,7 +13,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { config } from "@/utils/api";
 import { setEncryptedStorage } from "@/utils/encryption";
 import { initializeActivityTracking } from "@/utils/auth";
-import { AlertCircle, Eye, EyeOff } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, CheckCircle } from "lucide-react";
 import { message } from "antd";
 
 // Types for API requests and responses
@@ -35,14 +35,20 @@ export function SignUp() {
     confirmPassword: "",
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+
+  // Alert state
+  const [alert, setAlert] = useState<{
+    type: "error" | "success";
+    text: string;
+  } | null>(null);
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [payload, setPayload] = useState<RegisterRequest | null>(null);
   const [shouldRegister, setShouldRegister] = useState(false);
   const navigate = useNavigate();
 
-  // useEffect to create payload when form is valid (only on submit)
+  // Create payload from form data
   useEffect(() => {
     if (
       formData.firstName &&
@@ -51,14 +57,13 @@ export function SignUp() {
       formData.phone &&
       formData.password
     ) {
-      const newPayload = {
+      setPayload({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         phone: formData.phone,
         password: formData.password,
-      };
-      setPayload(newPayload);
+      });
     }
   }, [
     formData.firstName,
@@ -68,7 +73,7 @@ export function SignUp() {
     formData.password,
   ]);
 
-  // useEffect to handle API call when shouldRegister is true
+  // API call
   useEffect(() => {
     const registerUser = async () => {
       if (!shouldRegister || !payload) return;
@@ -80,39 +85,40 @@ export function SignUp() {
         const response = await axios.post(
           `${config.apiBaseUrl}${config.endpoints.register}`,
           payload,
-          {
-            withCredentials: true,
-          }
+          { withCredentials: true }
         );
 
         console.log("Registration response:", response.data);
 
         if (response.data.success) {
-          // Store user data in encrypted form if registration is successful
           if (response.data.data) {
             setEncryptedStorage("userData", response.data.data);
-            // Initialize activity tracking after successful registration
             initializeActivityTracking();
           }
 
-          message.success("Account created successfully! Welcome!");
+          message.success("User created successfully");
+          setAlert({
+            type: "success",
+            text: "User created successfully",
+          });
 
-          // Small delay before redirect to show the success message
           setTimeout(() => {
             navigate("/");
           }, 1500);
         } else {
           message.error(response.data.message || "Registration failed");
-          setError(response.data.message || "Registration failed");
+          setAlert({
+            type: "error",
+            text: response.data.message || "Registration failed",
+          });
         }
       } catch (error: any) {
         console.error("Registration error:", error);
-
         const errorMessage =
           error.response?.data?.message ||
           "An unexpected error occurred. Please try again.";
         message.error(errorMessage);
-        setError(errorMessage);
+        setAlert({ type: "error", text: errorMessage });
       } finally {
         setIsLoading(false);
         setShouldRegister(false);
@@ -123,42 +129,36 @@ export function SignUp() {
   }, [shouldRegister, payload, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-    // Clear error when user starts typing
-    if (error) setError("");
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (alert) setAlert(null); // clear alert when typing
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setAlert(null);
 
-    // Phone number validation
-    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    const phoneRegex = /[1-9][\d]{0,15}$/;
     if (!phoneRegex.test(formData.phone.replace(/\s/g, ""))) {
-      const errorMsg = "Please enter a valid phone number!";
-      setError(errorMsg);
-      message.error(errorMsg);
+      setAlert({ type: "error", text: "Please enter a valid phone number!" });
+      message.error("Please enter a valid phone number!");
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      const errorMsg = "Passwords don't match!";
-      setError(errorMsg);
-      message.error(errorMsg);
+      setAlert({ type: "error", text: "Passwords don't match!" });
+      message.error("Passwords don't match!");
       return;
     }
 
     if (!payload) {
-      const errorMsg = "Form data is not ready. Please try again.";
-      setError(errorMsg);
-      message.error(errorMsg);
+      setAlert({
+        type: "error",
+        text: "Form data is not ready. Please try again.",
+      });
+      message.error("Form data is not ready. Please try again.");
       return;
     }
 
-    // Trigger the API call
     setShouldRegister(true);
   };
 
@@ -174,10 +174,34 @@ export function SignUp() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {error && (
-            <div className="mb-4 p-3 rounded-md bg-destructive/15 border border-destructive/20 flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-destructive" />
-              <span className="text-sm text-destructive">{error}</span>
+          {alert && (
+            <div
+              className={`mb-4 p-3 rounded-md border flex items-center gap-2 ${
+                alert.type === "error"
+                  ? "bg-destructive/15 border-destructive/20"
+                  : "bg-emerald-500/15 border-emerald-500/20"
+              }`}
+            >
+              {alert.type === "error" ? (
+                <AlertCircle
+                  className={`h-4 w-4 ${
+                    alert.type === "error"
+                      ? "text-destructive"
+                      : "text-green-700"
+                  }`}
+                />
+              ) : (
+                <CheckCircle className="h-4 w-4 text-emerald-500" />
+              )}
+              <span
+                className={`text-sm ${
+                  alert.type === "error"
+                    ? "text-destructive"
+                    : "text-emerald-500"
+                }`}
+              >
+                {alert.text}
+              </span>
             </div>
           )}
 
@@ -212,6 +236,7 @@ export function SignUp() {
                 />
               </div>
             </div>
+
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">
                 Email
@@ -226,6 +251,7 @@ export function SignUp() {
                 required
               />
             </div>
+
             <div className="space-y-2">
               <label htmlFor="phone" className="text-sm font-medium">
                 Phone Number
@@ -240,6 +266,7 @@ export function SignUp() {
                 required
               />
             </div>
+
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium">
                 Password
@@ -256,7 +283,7 @@ export function SignUp() {
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground "
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
@@ -267,6 +294,7 @@ export function SignUp() {
                 </button>
               </div>
             </div>
+
             <div className="space-y-2">
               <label htmlFor="confirmPassword" className="text-sm font-medium">
                 Confirm Password
@@ -283,7 +311,7 @@ export function SignUp() {
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground "
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
                   {showConfirmPassword ? (
@@ -294,6 +322,7 @@ export function SignUp() {
                 </button>
               </div>
             </div>
+
             <LoadingButton
               type="submit"
               className="w-full"

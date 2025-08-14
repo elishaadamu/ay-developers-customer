@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Modal } from "antd";
 import { useEffect } from "react";
 import { toast } from "sonner";
+import { getEncryptedStorage } from "@/utils/encryption";
 import axios from "axios";
 import {
   Card,
@@ -45,6 +46,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Loading } from "@/components/ui/loading";
 import {
   TrendingUp,
   ShoppingCart,
@@ -89,7 +91,25 @@ export function Orders() {
   const navigate = useNavigate();
   const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
   const [orders, setOrders] = useState<OrderItem[]>([]);
-  const [userData] = useState<any>(null);
+  const [userData, setUserData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  // Load user data from encrypted storage
+  useEffect(() => {
+    try {
+      const encryptedUserData = getEncryptedStorage("userData");
+      if (encryptedUserData) {
+        console.log("🔓 Decrypted user data:", encryptedUserData);
+        setUserData(encryptedUserData);
+        // Fetch orders only after we have user data
+        fetchOrders(encryptedUserData);
+      }
+    } catch (error) {
+      console.error("❌ Failed to decrypt user data:", error);
+    }
+  }, []);
+
   const [customerInfo, setCustomerInfo] = useState({
     name: "",
     email: "",
@@ -139,7 +159,7 @@ export function Orders() {
         address: customerInfo.address,
       },
       user: {
-        id: userData?._id || userData?.id,
+        id: userData?.id,
         fullName: `${userData?.firstName} ${userData?.lastName}`,
       },
       cart: {
@@ -156,6 +176,9 @@ export function Orders() {
       reference: `AY-${Date.now()}`,
     });
 
+    // Close the cart modal before opening Paystack
+    setIsNewOrderOpen(false);
+
     const handler = PaystackPop.setup({
       key: import.meta.env.VITE_PAYSTACK_PUBLIC_URL,
       email: customerInfo.email,
@@ -163,7 +186,7 @@ export function Orders() {
       currency: "NGN",
       ref: `AY-${Date.now()}`,
       metadata: {
-        userId: userData?._id || userData?.id,
+        userId: userData?.id,
         name: `${userData?.firstName} ${userData?.lastName}`,
         customer_name: customerInfo.name,
         customer_email: customerInfo.email,
@@ -354,14 +377,19 @@ export function Orders() {
       },
     });
   };
-  // Fetch tickets from API
-  const fetchOrders = async () => {
+  // Fetch orders from API
+  const fetchOrders = async (loadedUserData?: any) => {
+    setLoading(true);
+    if (initialLoading) {
+      setInitialLoading(true);
+    }
     try {
-      const userId = userData?._id || userData?.id;
+      const userId = loadedUserData?.id || userData?.id;
       if (!userId) {
         console.error("❌ No user ID found");
         return;
       }
+      console.log("User ID", userId);
 
       const response = await axios.get(
         `${config.apiBaseUrl}${config.endpoints.getPayments}${userId}`
@@ -405,12 +433,14 @@ export function Orders() {
     } catch (error) {
       console.error("❌ Error fetching payments:", error);
       showAlert("Failed to fetch payment history", "error");
+    } finally {
+      setLoading(false);
+      if (initialLoading) {
+        setInitialLoading(false);
+      }
     }
   };
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
   // Handle order completion
   const handleCompleteOrder = (orderId: string) => {
     Modal.confirm({
@@ -527,8 +557,20 @@ export function Orders() {
 
   const userStats = getUserStats();
 
+  // Show loading screen while initial data loads
+  if (initialLoading) {
+    return (
+      <div className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+        <Loading size="lg" text="Loading orders..." />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+    <div className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 relative">
+      {loading && !initialLoading && (
+        <Loading overlay text="Loading orders..." />
+      )}
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold md:text-2xl">Orders & Payments</h1>
         <div className="flex gap-2">

@@ -46,13 +46,8 @@ export function SignIn() {
   // Handle successful login and redirect
   const handleSuccessfulLogin = () => {
     // Check if there's a stored redirect URL
-    const redirectUrl = sessionStorage.getItem("redirectUrl");
-    if (redirectUrl) {
-      sessionStorage.removeItem("redirectUrl"); // Clear the stored URL
-      navigate("/user/dashboard");
-    } else {
-      navigate("/user/dashboard"); // Default redirect
-    }
+
+    navigate("/user/dashboard");
   };
 
   // useEffect to handle API call when shouldLogin is true
