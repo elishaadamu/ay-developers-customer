@@ -90,9 +90,9 @@ export function SignUp() {
 
         console.log("Registration response:", response.data);
 
-        if (response.data.success) {
-          if (response.data.data) {
-            setEncryptedStorage("userData", response.data.data);
+        if (response.data.message) {
+          if (response.data.messages) {
+            setEncryptedStorage("userData", response.data.user);
             initializeActivityTracking();
           }
 
@@ -103,7 +103,7 @@ export function SignUp() {
           });
 
           setTimeout(() => {
-            navigate("/");
+            navigate("/signin");
           }, 1500);
         } else {
           message.error(response.data.message || "Registration failed");

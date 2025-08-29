@@ -589,7 +589,7 @@ export function Orders() {
                 Complete Order
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Complete Your Order</DialogTitle>
                 <DialogDescription>
@@ -614,16 +614,16 @@ export function Orders() {
                           return (
                             <div
                               key={item._id}
-                              className="flex items-center gap-4 p-4 border rounded-lg"
+                              className="flex items-start gap-4 p-4 border rounded-lg"
                             >
-                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                                 {item.icon ? (
-                                  <IconComponent className="h-4 w-4" />
+                                  <IconComponent className="h-6 w-6" />
                                 ) : (
                                   <img
                                     src={item.images}
                                     alt={item.name}
-                                    className="h-4 w-4 object-cover"
+                                    className="h-full w-full rounded-lg object-cover"
                                     onError={(e) => {
                                       e.currentTarget.src = "";
                                       e.currentTarget.onerror = null;
@@ -632,9 +632,9 @@ export function Orders() {
                                         (() => {
                                           const icon =
                                             document.createElement("div");
-                                          icon.className = "h-4 w-4";
+                                          icon.className = "h-6 w-6";
                                           icon.innerHTML =
-                                            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="h-4 w-4"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
+                                            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="h-6 w-6"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
                                           return icon;
                                         })()
                                       );
@@ -642,48 +642,58 @@ export function Orders() {
                                   />
                                 )}
                               </div>
-                              <div className="flex-1">
-                                <h4 className="font-medium">{item.name}</h4>
+                              <div className="grid flex-1 gap-1">
+                                <div className="flex items-start justify-between">
+                                  <h4 className="font-medium">{item.name}</h4>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => removeFromCart(item._id)}
+                                    className="-mr-2 -mt-2 h-8 w-8 shrink-0"
+                                  >
+                                    <X className="h-4 w-4 text-muted-foreground" />
+                                  </Button>
+                                </div>
                                 <p className="text-sm text-muted-foreground">
                                   {formatPrice(item.price)} each
                                 </p>
+                                <div className="mt-2 flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() =>
+                                        updateQuantity(
+                                          item._id,
+                                          item.quantity - 1
+                                        )
+                                      }
+                                    >
+                                      <Minus className="h-4 w-4" />
+                                    </Button>
+                                    <span className="w-10 text-center font-medium">
+                                      {item.quantity}
+                                    </span>
+                                    <Button
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() =>
+                                        updateQuantity(
+                                          item._id,
+                                          item.quantity + 1
+                                        )
+                                      }
+                                    >
+                                      <Plus className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                  <p className="text-right font-semibold">
+                                    {formatPrice(item.price * item.quantity)}
+                                  </p>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() =>
-                                    updateQuantity(item._id, item.quantity - 1)
-                                  }
-                                >
-                                  <Minus className="h-3 w-3" />
-                                </Button>
-                                <span className="w-8 text-center">
-                                  {item.quantity}
-                                </span>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() =>
-                                    updateQuantity(item._id, item.quantity + 1)
-                                  }
-                                >
-                                  <Plus className="h-3 w-3" />
-                                </Button>
-                              </div>
-                              <div className="text-right w-32">
-                                <p className="font-medium">
-                                  {formatPrice(item.price * item.quantity)}
-                                </p>
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeFromCart(item._id)}
-                                className="text-red-500 hover:text-red-700"
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
                             </div>
                           );
                         })}
@@ -714,7 +724,7 @@ export function Orders() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="grid gap-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div>
                         <Label htmlFor="customer-name">Full Name *</Label>
                         <Input
@@ -745,7 +755,7 @@ export function Orders() {
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div>
                         <Label htmlFor="customer-phone">Phone Number</Label>
                         <Input

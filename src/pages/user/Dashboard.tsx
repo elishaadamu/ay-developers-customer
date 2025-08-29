@@ -294,9 +294,9 @@ export function Dashboard() {
       {/* Welcome Section */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {/* Welcome Card */}
-        <Card className="md:col-span-2 lg:col-span-2">
+        <Card className="lg:col-span-2">
           <CardHeader>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:text-left">
               <Avatar className="h-16 w-16">
                 <AvatarImage
                   src={
@@ -459,8 +459,8 @@ export function Dashboard() {
       <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3">
         {/* Recent Orders */}
         <Card className="xl:col-span-2">
-          <CardHeader className="flex flex-row items-center">
-            <div className="grid gap-2">
+          <CardHeader className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="grid flex-1 gap-2">
               <CardTitle>Recent Orders</CardTitle>
               <CardDescription>
                 Latest customer orders and their status
@@ -468,7 +468,7 @@ export function Dashboard() {
             </div>
             <Button
               size="sm"
-              className="ml-auto gap-1"
+              className="w-full gap-1 sm:w-auto"
               onClick={() => (window.location.href = "/user/orders")}
             >
               View All Orders
@@ -478,27 +478,33 @@ export function Dashboard() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Order ID</TableHead>
+                  <TableHead className="w-[100px]">Order ID</TableHead>
                   <TableHead>Product</TableHead>
-                  <TableHead>Amount</TableHead>
+                  <TableHead className="hidden sm:table-cell">Amount</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
+                  <TableHead className="hidden md:table-cell">Date</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {recentOrders.map((order) => (
                   <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.id}</TableCell>
+                    <TableCell className="max-w-[100px] truncate font-medium">
+                      {order.id}
+                    </TableCell>
                     <TableCell className="max-w-[200px] truncate">
                       {order.product}
                     </TableCell>
-                    <TableCell>{order.amount}</TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      {order.amount}
+                    </TableCell>
                     <TableCell>
                       <Badge variant={getStatusVariant(order.status)}>
                         {order.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{order.date}</TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {order.date}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -558,7 +564,7 @@ export function Dashboard() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center">
-            <div className="flex items-center gap-4 p-6 bg-blue-50 dark:bg-blue-950/20 rounded-lg w-full max-w-md">
+            <div className="flex flex-col items-center gap-4 p-6 text-center bg-blue-50 dark:bg-blue-950/20 rounded-lg w-full max-w-md sm:flex-row sm:items-center sm:text-left">
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-600 text-white">
                 <Users className="h-6 w-6" />
               </div>

@@ -263,7 +263,9 @@ export function Profile() {
       {isLoading && <Loading overlay text="Saving profile changes..." />}
 
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold md:text-2xl">Profile</h1>
+        <h1 className="text-lg font-semibold md:text-2xl dark:text-white">
+          Profile
+        </h1>
         <Button
           onClick={() => setIsEditing(!isEditing)}
           variant={isEditing ? "outline" : "default"}

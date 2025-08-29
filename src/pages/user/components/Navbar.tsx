@@ -1,6 +1,5 @@
-import { Bell, Search } from "lucide-react";
+import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,8 +14,8 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { useNavigate } from "react-router-dom";
 import { logout, stopActivityTracking } from "@/utils/auth";
 import { getEncryptedStorage } from "@/utils/encryption";
-import { message } from "antd";
 import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 
 export function UserNavbar() {
   const navigate = useNavigate();
@@ -44,13 +43,13 @@ export function UserNavbar() {
       logout();
 
       // Show success message
-      message.success("Logged out successfully");
+      toast.success("Logged out successfully");
 
       // Redirect to signin page
       navigate("/signin");
     } catch (error) {
       console.error("Logout error:", error);
-      message.error("Error during logout");
+      toast.error("Error during logout");
     }
   };
 
@@ -84,20 +83,9 @@ export function UserNavbar() {
   };
 
   return (
-    <header className="flex h-14 items-center p-10 gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
+    <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
       {/* Search */}
-      <div className="w-full flex-1">
-        <form>
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search products, orders, tickets..."
-              className="w-full appearance-none bg-background pl-8 shadow-none md:w-2/3 lg:w-1/3"
-            />
-          </div>
-        </form>
-      </div>
+      <div className="w-full flex-1"></div>
 
       {/* Right side items */}
       <div className="flex items-center gap-4">
