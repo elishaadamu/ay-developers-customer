@@ -167,13 +167,12 @@ export function Dashboard() {
         // Fetch tickets from API
         let totalAvailableTickets = 0;
         try {
-          const ticketsResponse = await fetch(
-            `${config.apiBaseUrl}${config.endpoints.ticket}${userId}`
-          );
-          if (ticketsResponse.ok) {
-            const tickets = await ticketsResponse.json();
-            totalAvailableTickets = tickets.length;
-          }
+          const link = `${config.apiBaseUrl}${config.endpoints.getTickets}/${userId}`;
+          const ticketsResponse = await axios.get(link);
+
+          const tickets = ticketsResponse.data;
+
+          totalAvailableTickets = tickets.length;
         } catch (error) {
           console.error("Error fetching tickets:", error);
         }
