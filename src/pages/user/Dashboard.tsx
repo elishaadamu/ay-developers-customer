@@ -31,7 +31,7 @@ import {
   Calendar,
 } from "lucide-react";
 import axios from "axios";
-import { getEncryptedStorage } from "@/utils/encryption";
+import { getEncryptedStorage, decryptData } from "@/utils/encryption";
 import config from "@/utils/api";
 import {
   getDashboardStats,
@@ -153,11 +153,22 @@ export function Dashboard() {
           console.error("Error fetching products:", error);
         }
 
+        const encryptedUserData = localStorage.getItem("userData");
+        if (!encryptedUserData) {
+          return;
+        }
+        const decryptedUserData: { id: string } =
+          decryptData(encryptedUserData);
+        const userId = decryptedUserData.id;
+
+        if (!userId) {
+          return;
+        }
         // Fetch tickets from API
         let totalAvailableTickets = 0;
         try {
           const ticketsResponse = await fetch(
-            `${config.apiBaseUrl}${config.endpoints.ticket}`
+            `${config.apiBaseUrl}${config.endpoints.ticket}${userId}`
           );
           if (ticketsResponse.ok) {
             const tickets = await ticketsResponse.json();
