@@ -52,7 +52,7 @@ import {
   MoreHorizontal,
   Eye,
 } from "lucide-react";
-import { getEncryptedStorage } from "@/utils/encryption";
+import { getEncryptedStorage, decryptData } from "@/utils/encryption";
 import { config } from "@/utils/api";
 import { setTicketsData } from "@/utils/dashboardData";
 import axios from "axios";
@@ -72,45 +72,6 @@ interface Ticket {
   role: string;
   reply?: string;
 }
-
-const mockTickets: Ticket[] = [
-  {
-    ticketId: "TKT-001",
-    subject: "Website hosting issue",
-    description: "My website is showing 502 error",
-    status: "open",
-    priority: "high",
-    createdAt: "2025-01-15T10:30:00.000Z",
-    updatedAt: "2025-01-16T14:20:00.000Z",
-    name: "John Doe",
-    email: "john.doe@example.com",
-    role: "customer",
-  },
-  {
-    ticketId: "TKT-002",
-    subject: "Mobile app login problem",
-    description: "Cannot login to mobile app",
-    status: "open",
-    priority: "medium",
-    createdAt: "2025-01-14T09:15:00.000Z",
-    updatedAt: "2025-01-14T09:15:00.000Z",
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    role: "customer",
-  },
-  {
-    ticketId: "TKT-003",
-    subject: "Digital marketing consultation",
-    description: "Need help with SEO strategy",
-    status: "closed",
-    priority: "low",
-    createdAt: "2025-01-12T16:45:00.000Z",
-    updatedAt: "2025-01-13T11:30:00.000Z",
-    name: "Mike Johnson",
-    email: "mike.johnson@example.com",
-    role: "customer",
-  },
-];
 
 export function Tickets() {
   const [activeTab, setActiveTab] = useState<string>("open");
@@ -174,9 +135,20 @@ export function Tickets() {
       setInitialLoading(true);
     }
     try {
-      console.log("🔄 Fetching tickets from API...");
+      const encryptedUserData = localStorage.getItem("userData");
+      if (!encryptedUserData) {
+        setLoading(false);
+        return;
+      }
+      const decryptedUserData: { id: string } = decryptData(encryptedUserData);
+      const userId = decryptedUserData.id;
+
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
       const response = await axios.get(
-        `${config.apiBaseUrl}${config.endpoints.ticket}`
+        `${config.apiBaseUrl}${config.endpoints.getTickets}/${userId}`
       );
 
       console.log("✅ Tickets fetched successfully:", response.data);
@@ -190,8 +162,8 @@ export function Tickets() {
     } catch (error) {
       console.error("❌ Error fetching tickets:", error);
       showMessage("error", "Failed to fetch tickets");
-      // Use mock data as fallback
-      setTickets(mockTickets);
+
+      setTickets([]);
     } finally {
       setLoading(false);
       if (initialLoading) {
@@ -214,6 +186,21 @@ export function Tickets() {
 
     setLoading(true);
     try {
+      const encryptedUserData = localStorage.getItem("userData");
+      if (!encryptedUserData) {
+        showMessage("error", "User not authenticated");
+        setLoading(false);
+        return;
+      }
+      const decryptedUserData: { id: string } = decryptData(encryptedUserData);
+      const userId = decryptedUserData.id;
+
+      if (!userId) {
+        showMessage("error", "User ID not found");
+        setLoading(false);
+        return;
+      }
+
       const fullName = `${userData.firstName} ${userData.lastName}`;
       const payload = {
         subject: newTicket.subject,
@@ -223,19 +210,14 @@ export function Tickets() {
         email: userData.email,
         role: userData.role,
         status: "open",
+        userId: userId,
       };
 
       console.log("🔄 Creating ticket with payload:", payload);
 
       const response = await axios.post(
         `${config.apiBaseUrl}${config.endpoints.ticket}`,
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        payload
       );
 
       if (response.data) {
@@ -693,7 +675,7 @@ export function Tickets() {
                   <Label className="text-sm font-medium">Status</Label>
                   <Badge
                     variant={getStatusVariant(selectedTicket.status)}
-                    className="mt-1"
+                    className="mt-1 ml-3"
                   >
                     {selectedTicket.status.charAt(0).toUpperCase() +
                       selectedTicket.status.slice(1)}
@@ -713,7 +695,7 @@ export function Tickets() {
                   <Label className="text-sm font-medium">Priority</Label>
                   <Badge
                     variant={getPriorityVariant(selectedTicket.priority)}
-                    className="mt-1"
+                    className="mt-1 ml-3"
                   >
                     {selectedTicket.priority.charAt(0).toUpperCase() +
                       selectedTicket.priority.slice(1)}
